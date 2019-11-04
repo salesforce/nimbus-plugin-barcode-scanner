@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "449284303480",
+    "firebase_url": "https://numbus-plugins.firebaseio.com",
+    "project_id": "numbus-plugins",
+    "storage_bucket": "numbus-plugins.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:449284303480:android:5c3ab3bd5a9ef91adcdb8d",
+        "android_client_info": {
+          "package_name": "com.salesforce.barcodescannerplugin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "449284303480-vp4e9mncairou18eu9fqppnnh8apv5te.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUjAdocyGDFzGxu05dmm8URuxozsDI-nE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "449284303480-vp4e9mncairou18eu9fqppnnh8apv5te.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

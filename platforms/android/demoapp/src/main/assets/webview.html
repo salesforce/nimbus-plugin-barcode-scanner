@@ -1,0 +1,52 @@
+<!--
+  ~
+  ~ Copyright (c) 2019, Salesforce.com, inc.
+  ~ All rights reserved.
+  ~ SPDX-License-Identifier: BSD-3-Clause
+  ~ For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+  ~
+  -->
+
+<html>
+<head>
+    <script src="nimbus.js"></script>
+    <script>
+        function beginScanning() {
+            if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
+                document.querySelector('#beginScanning').style.visibility = 'hidden'
+                document.querySelector('#resumeScanning').style.visibility = 'visible'
+                document.querySelector('#endScanning').style.visibility = 'visible'
+                barcodeScanner.beginCapture(
+                    {"barcodeTypes": ["code128", "code39", "code93", "ean13", "ean8", "upce", "upca", "qr"]},
+                    (barcode) => {
+                        document.querySelector("#result").textContent = "type: " + barcode.type + " value: " + decodeURIComponent(barcode.value);
+                    },
+                    (error) => {
+                    }
+                );
+            }
+        }
+
+        function endScanning() {
+            if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
+                document.querySelector('#beginScanning').style.visibility = 'visible'
+                document.querySelector('#resumeScanning').style.visibility = 'hidden'
+                document.querySelector('#endScanning').style.visibility = 'hidden'
+                barcodeScanner.endCapture();
+            }
+        }
+
+        function resumeScanning() {
+            if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
+                barcodeScanner.resumeCapture();
+            }
+        }
+    </script>
+</head>
+<body>
+    <input id='beginScanning' type='button' onClick='beginScanning()' value='Scan Barcode'/>
+    <input id='resumeScanning' type='button' onClick='resumeScanning()' value='Resume Scanning' style='visibility:hidden'/>
+    <input id='endScanning' type='button' onClick='endScanning()' value='End Scanning' style='visibility:hidden'/>
+    <div id="result">Scan Barcode to see result</div>
+</body>
+</html>

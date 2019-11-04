@@ -1,0 +1,28 @@
+{
+  "psi-header.config": {
+    "forceToTop": true,
+    "blankLinesAfter": 1
+  },
+  "psi-header.templates": [
+    {
+      "language": "*",
+      "template": [
+        "",
+        "Copyright (c) 2019, Salesforce.com, inc.",
+        "All rights reserved.",
+        "SPDX-License-Identifier: BSD-3-Clause",
+        "For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause",
+        ""
+      ]
+    }
+  ],
+  "psi-header.lang-config": [
+    {
+      "language": "*",
+      "begin": "",
+      "end": "",
+      "prefix": "// "
+    }
+  ],
+  "editor.formatOnSave": true
+}
