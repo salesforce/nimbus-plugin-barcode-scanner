@@ -1,0 +1,106 @@
+apply plugin: "com.github.dcendents.android-maven"
+apply plugin: "com.jfrog.bintray"
+
+task sourcesJar(type: Jar) {
+    archiveClassifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+version VERSION
+group GROUP
+
+ext.bumpVersion = {major, minor, patch ->
+    Properties props = new Properties()
+    File propsFile = new File('gradle.properties')
+    props.load(propsFile.newDataInputStream())
+    def stable_project_version = props.getProperty('VERSION') as String
+    def (currentMajor, currentMinor, currentPatch) = stable_project_version.tokenize('.')
+    major = String.valueOf(currentMajor.toInteger() + major)
+    minor = String.valueOf(currentMinor.toInteger() + minor)
+    patch = String.valueOf(currentPatch.toInteger() + patch)
+    version = major + '.' + minor + '.' + patch
+    props.setProperty('VERSION', version)
+    props.store(propsFile.newWriter(), null)
+    println(version)
+}
+
+task bumpPatch {
+    doLast {
+        bumpVersion(0, 0, 1)
+    }
+}
+
+task bumpMinor {
+    doLast {
+        bumpVersion(0, 1, 0)
+    }
+}
+
+task bumpMajor {
+    doLast {
+        bumpVersion(1, 0, 0)
+    }
+}
+
+task createTag {
+    doLast {
+        def tagName = "v$version"
+        ("git tag $tagName").execute()
+        ("git push --tags").execute()
+        println("Created tag $tagName")
+    }
+}
+
+task patchAndTag {
+    dependsOn 'bumpPatch'
+    dependsOn 'createTag'
+}
+
+createTag.mustRunAfter bumpPatch
+
+install {
+    repositories.mavenInstaller {
+        pom {
+            project {
+                packaging POM_PACKAGING
+                name project.name
+                url POM_URL
+                licenses {
+                    license {
+                        name POM_LICENSE_NAME
+                        url POM_LICENSE_URL
+                    }
+                }
+                scm {
+                    connection POM_SCM_CONNECTION
+                    developerConnection POM_SCM_DEV_CONNECTION
+                    url POM_SCM_URL
+                }
+            }
+        }
+    }
+}
+
+bintray {
+    user = project.findProperty("bintrayUser") ?: System.getenv("BINTRAY_USER")
+    key = project.findProperty("bintrayApiKey") ?: System.getenv("BINTRAY_API_KEY")
+    configurations = ['archives']
+    publish = true
+    override = true
+    pkg {
+        name = project.name
+        repo = BINTRAY_REPO
+        userOrg = BINTRAY_ORG
+        licenses = [POM_LICENSE_NAME]
+        vcsUrl = POM_SCM_URL
+        labels = ['android', 'salesforce', 'hybrid']
+        version {
+            name = project.version
+            released = new Date()
+        }
+    }
+}
