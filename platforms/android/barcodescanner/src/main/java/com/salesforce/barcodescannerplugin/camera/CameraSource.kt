@@ -23,7 +23,7 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
 import com.salesforce.barcodescannerplugin.Utils
 import java.io.IOException
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.IdentityHashMap
 import kotlin.math.abs
 import kotlin.math.ceil
 

@@ -49,7 +49,7 @@ class LiveBarcodeScanningActivity : AppCompatActivity() {
 
         val barcodeScannerOptions = intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
         if (barcodeScannerOptions != null) {
-            val combinedType = barcodeScannerOptions.barcodeTypes.fold(0){sum, barcodeType -> sum or barcodeType.toVisionBarcodeType()}
+            val combinedType = barcodeScannerOptions.barcodeTypes.fold(0) { sum, barcodeType -> sum or barcodeType.toVisionBarcodeType() }
             barcodeDetectorOptions = FirebaseVisionBarcodeDetectorOptions.Builder().setBarcodeFormats(combinedType).build()
         }
 
@@ -65,7 +65,7 @@ class LiveBarcodeScanningActivity : AppCompatActivity() {
                 setTarget(promptChip)
             }
 
-        close_button.setOnClickListener{ onBackPressed() }
+        close_button.setOnClickListener { onBackPressed() }
 
         setUpWorkflowModel()
     }
@@ -78,7 +78,6 @@ class LiveBarcodeScanningActivity : AppCompatActivity() {
         cameraSource?.setFrameProcessor(BarcodeProcessor(graphicOverlay!!, workflowModel!!, barcodeDetectorOptions))
         workflowModel?.setWorkflowState(WorkflowState.DETECTING)
     }
-
 
     override fun onPause() {
         super.onPause()

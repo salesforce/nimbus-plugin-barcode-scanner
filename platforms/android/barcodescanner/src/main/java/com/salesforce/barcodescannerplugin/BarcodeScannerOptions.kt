@@ -11,18 +11,23 @@ package com.salesforce.barcodescannerplugin
 
 import org.json.JSONObject
 import java.io.Serializable
+import java.lang.Exception
 
-class BarcodeScannerOptions(val barcodeTypes: List<BarcodeType>): Serializable {
+class BarcodeScannerOptions(val barcodeTypes: List<BarcodeType>) : Serializable {
     companion object {
         @JvmStatic
         fun fromJSON(barcodeScannerOptions: String): BarcodeScannerOptions {
-            val options = JSONObject(barcodeScannerOptions)
-            val barcodeTypes = options.getJSONArray("barcodeTypes")
-            val convertedTypes = mutableListOf<BarcodeType>()
-            for (i in 0 until barcodeTypes.length()) {
-                convertedTypes.add(BarcodeType.valueOf(barcodeTypes.getString(i).toUpperCase()))
+            return try {
+                val options = JSONObject(barcodeScannerOptions)
+                val barcodeTypes = options.getJSONArray("barcodeTypes")
+                val convertedTypes = mutableListOf<BarcodeType>()
+                for (i in 0 until barcodeTypes.length()) {
+                    convertedTypes.add(BarcodeType.valueOf(barcodeTypes.getString(i).toUpperCase()))
+                }
+                BarcodeScannerOptions(convertedTypes)
+            } catch (e: Exception) {
+                BarcodeScannerOptions(listOf())
             }
-            return BarcodeScannerOptions(convertedTypes)
         }
     }
 }

@@ -22,9 +22,9 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 @Extension("barcodeScanner")
-class BarcodeScannerPlugin(val activity: Activity) : NimbusExtension, BarcodeScanner{
-    private lateinit var onBarcodeScanned : (barcode: BarcodeScannerResult) -> Unit
-    private lateinit var onBarcodeError : (error: String) -> Unit
+class BarcodeScannerPlugin(val activity: Activity) : NimbusExtension, BarcodeScanner {
+    private lateinit var onBarcodeScanned: (barcode: BarcodeScannerResult) -> Unit
+    private lateinit var onBarcodeError: (error: String) -> Unit
     private lateinit var barcodeOptions: BarcodeScannerOptions
 
     @ExtensionMethod
@@ -51,26 +51,22 @@ class BarcodeScannerPlugin(val activity: Activity) : NimbusExtension, BarcodeSca
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
-    fun onMessageEvent(event: BarcodeScannedEvent){
+    fun onMessageEvent(event: BarcodeScannedEvent) {
         onBarcodeScanned(event.barcode)
         EventBus.getDefault().removeStickyEvent(event)
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
-    fun onMessageEvent(event: BarcodeErrorEvent){
+    fun onMessageEvent(event: BarcodeErrorEvent) {
         onBarcodeError(event.errorMessage)
         EventBus.getDefault().removeStickyEvent(event)
     }
 
     fun startScanner() {
-
         val intent = Intent(activity, LiveBarcodeScanningActivity::class.java)
         val bundle = Bundle()
         bundle.putSerializable(LiveBarcodeScanningActivity.OPTIONS_VALUE, barcodeOptions)
         intent.putExtras(bundle)
         activity.startActivity(intent)
     }
-
 }
-
-

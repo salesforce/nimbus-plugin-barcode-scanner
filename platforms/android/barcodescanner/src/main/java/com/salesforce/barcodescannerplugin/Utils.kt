@@ -89,7 +89,7 @@ object Utils {
         return validPreviewSizes
     }
 
-    fun postError(sourceClass: String, errorMessage: String, error: Exception){
+    fun postError(sourceClass: String, errorMessage: String, error: Exception) {
         Log.e(sourceClass, errorMessage, error)
         EventBus.getDefault().postSticky(BarcodeErrorEvent("$errorMessage: ${error.message}"))
     }

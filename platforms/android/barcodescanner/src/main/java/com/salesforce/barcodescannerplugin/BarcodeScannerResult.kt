@@ -10,12 +10,14 @@
 package com.salesforce.barcodescannerplugin
 
 import com.salesforce.nimbus.JSONSerializable
+import org.json.JSONObject
 import java.net.URLEncoder
 
-class BarcodeScannerResult(val type: BarcodeType, val value: String): JSONSerializable{
+class BarcodeScannerResult(val type: BarcodeType, val value: String) : JSONSerializable {
     override fun stringify(): String {
-        return """
-            {'type': '${type}', 'value': '${URLEncoder.encode(value, "utf-8")}'}
-        """.trimIndent()
+        return JSONObject().apply {
+            put("type", type)
+            put("value", URLEncoder.encode(value, "utf-8"))
+        }.toString()
     }
 }
