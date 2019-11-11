@@ -9,7 +9,7 @@ jobs:
 
       - run:
           name: Build Android
-          working_directory: native/android
+          working_directory: platforms/android
           command: ./gradlew assembleDebug testDebugUnitTest
 
 workflows:
