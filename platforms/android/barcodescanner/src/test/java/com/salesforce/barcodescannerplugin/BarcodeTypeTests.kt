@@ -14,14 +14,14 @@ import org.junit.Test
 
 class BarcodeTypeTests {
     @Test
-    fun `toVisionBarcodeType returns correct value`(){
+    fun `toVisionBarcodeType returns correct value`() {
         val barcodeType = BarcodeType.EAN8
         val visionType = barcodeType.toVisionBarcodeType()
         assert(visionType == FirebaseVisionBarcode.FORMAT_EAN_8)
     }
 
     @Test
-    fun `fromVisionBarcode returns correct barcodeType`(){
+    fun `fromVisionBarcode returns correct barcodeType`() {
         val visionType = FirebaseVisionBarcode.FORMAT_CODE_128
         val barcodeType = BarcodeType.fromVisionBarcode(visionType)
         assert(barcodeType == BarcodeType.CODE128)

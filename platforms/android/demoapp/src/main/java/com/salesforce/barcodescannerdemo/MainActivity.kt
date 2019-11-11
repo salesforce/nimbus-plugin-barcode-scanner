@@ -14,7 +14,6 @@ import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
 import com.salesforce.barcodescannerplugin.BarcodeScannerPlugin
 import com.salesforce.barcodescannerplugin.BarcodeScannerPluginBinder
-import com.salesforce.barcodescannerplugin.Utils
 import com.salesforce.nimbus.NimbusBridge
 import kotlinx.android.synthetic.main.activity_main.*
 

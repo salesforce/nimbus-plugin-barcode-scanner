@@ -11,7 +11,6 @@ package com.salesforce.barcodescannerplugin
 
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 
-
 enum class BarcodeType {
         CODE128,
         CODE93,

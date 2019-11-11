@@ -13,7 +13,7 @@ import com.salesforce.nimbus.JSONSerializable
 import org.json.JSONObject
 import java.net.URLEncoder
 
-class BarcodeScannerResult(val type: BarcodeType, val value: String): JSONSerializable{
+class BarcodeScannerResult(val type: BarcodeType, val value: String) : JSONSerializable {
     override fun stringify(): String {
         return JSONObject().apply {
             put("type", type)

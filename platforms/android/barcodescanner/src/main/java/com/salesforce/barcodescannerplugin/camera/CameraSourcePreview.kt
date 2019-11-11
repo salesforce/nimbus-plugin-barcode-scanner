@@ -11,7 +11,6 @@ package com.salesforce.barcodescannerplugin.camera
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.widget.FrameLayout

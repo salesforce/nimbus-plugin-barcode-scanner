@@ -9,8 +9,12 @@
 
 package com.salesforce.barcodescannerplugin.barcodedetection
 
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.graphics.Paint.Style
+import android.graphics.RectF
 import androidx.core.content.ContextCompat
 import com.salesforce.barcodescannerplugin.R
 import com.salesforce.barcodescannerplugin.camera.GraphicOverlay

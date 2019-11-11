@@ -10,11 +10,11 @@
 package com.salesforce.barcodescannerplugin
 
 import org.junit.Test
-import java.util.*
+import java.util.UUID
 
 class BarcodeScannerResultTests {
     @Test
-    fun `stringify returns type and value`(){
+    fun `stringify returns type and value`() {
         val barcodeScannerResult = BarcodeScannerResult(BarcodeType.UPCE, UUID.randomUUID().toString())
         val stringified = barcodeScannerResult.stringify()
         assert(stringified.contains("\"type\":\"${barcodeScannerResult.type}\""))
