@@ -31,6 +31,7 @@ allprojects {
 configure(subprojects.findAll{it.name != "demoapp"}) {
     afterEvaluate { project ->
         project.apply from: rootProject.file('gradle/publishing.gradle')
+        project.apply from: rootProject.file('gradle/lint.gradle')
     }
 }
 

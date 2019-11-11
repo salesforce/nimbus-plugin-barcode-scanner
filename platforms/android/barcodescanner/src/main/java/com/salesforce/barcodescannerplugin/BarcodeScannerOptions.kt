@@ -18,7 +18,6 @@ class BarcodeScannerOptions(val barcodeTypes: List<BarcodeType>): Serializable {
         @JvmStatic
         fun fromJSON(barcodeScannerOptions: String): BarcodeScannerOptions {
             return try {
-
                 val options = JSONObject(barcodeScannerOptions)
                 val barcodeTypes = options.getJSONArray("barcodeTypes")
                 val convertedTypes = mutableListOf<BarcodeType>()
