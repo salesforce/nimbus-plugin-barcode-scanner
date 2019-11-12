@@ -23,19 +23,16 @@ import org.greenrobot.eventbus.ThreadMode
 
 @Extension("barcodeScanner")
 class BarcodeScannerPlugin(val activity: Activity) : NimbusExtension, BarcodeScanner {
-    private lateinit var onBarcodeScanned: (barcode: BarcodeScannerResult) -> Unit
-    private lateinit var onBarcodeError: (error: String) -> Unit
+    private lateinit var scannerCallback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
     private lateinit var barcodeOptions: BarcodeScannerOptions
 
     @ExtensionMethod
     override fun beginCapture(
         options: BarcodeScannerOptions?,
-        onScan: (barcode: BarcodeScannerResult) -> Unit,
-        onError: (error: String) -> Unit
+        callback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
     ) {
         barcodeOptions = options ?: BarcodeScannerOptions(listOf())
-        onBarcodeScanned = onScan
-        onBarcodeError = onError
+        scannerCallback = callback
         EventBus.getDefault().register(this)
         startScanner()
     }
@@ -52,13 +49,13 @@ class BarcodeScannerPlugin(val activity: Activity) : NimbusExtension, BarcodeSca
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onMessageEvent(event: BarcodeScannedEvent) {
-        onBarcodeScanned(event.barcode)
+        scannerCallback(event.barcode, null)
         EventBus.getDefault().removeStickyEvent(event)
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onMessageEvent(event: BarcodeErrorEvent) {
-        onBarcodeError(event.errorMessage)
+        scannerCallback(null, event.errorMessage)
         EventBus.getDefault().removeStickyEvent(event)
     }
 

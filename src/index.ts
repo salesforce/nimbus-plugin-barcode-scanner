@@ -24,8 +24,7 @@ export interface BarcodeScanner {
   // Begin a capture session with the specified options
   beginCapture(
     options: BarcodeScannerOptions,
-    onScan: (barcode: Barcode) => void,
-    onError: (error: Error) => void
+    callback: (barcode: Barcode, error: String) => void
   ): void;
 
   // Resume an existing scanning session
