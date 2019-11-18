@@ -33,7 +33,9 @@ class BarcodeScannerPlugin(val activity: Activity) : NimbusExtension, BarcodeSca
     ) {
         barcodeOptions = options ?: BarcodeScannerOptions(listOf())
         scannerCallback = callback
-        EventBus.getDefault().register(this)
+        if (!EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().register(this)
+        }
         startScanner()
     }
 
