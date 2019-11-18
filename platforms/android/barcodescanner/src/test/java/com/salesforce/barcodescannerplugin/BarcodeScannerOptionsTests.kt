@@ -36,4 +36,10 @@ class BarcodeScannerOptionsTests {
         val convertedType = BarcodeScannerOptions.fromJSON("")
         assertNotNull(convertedType)
     }
+
+    @Test
+    fun `passing no barcode types defaults to empty list`(){
+        val barcodeScannerOptions = BarcodeScannerOptions()
+        assert(barcodeScannerOptions.barcodeTypes.count() == 0)
+    }
 }

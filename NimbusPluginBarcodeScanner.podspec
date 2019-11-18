@@ -1,16 +1,16 @@
 Pod::Spec.new do |s|
   s.name             = 'NimbusPluginBarcodeScanner'
   s.version          = '0.1.0'
-  s.summary          = 'A short description of NimbusPluginBarcodeScanner.'
+  s.summary          = 'A Nimbus plugin for scanning barcodes.'
 
   s.description      = <<-DESC
-TODO: Add long description of the pod here.
+  A plugin for the Nimbus framework to scan barcodes from a webview and return results.
                        DESC
 
   s.homepage         = 'https://git.soma.salesforce.com/hype/nimbus-plugin-barcode-scanner'
   s.license          = 'BSD-3-Clause'
   s.author           = { 'Hybrid Platform Team' => 'hybridplatform@salesforce.com' }
-  s.source           = { :git => 'https://git.soma.salesforce.com/hype/nimbus-plugin-barcode-scanner.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/salesforce/nimbus-plugin-barcode-scanner.git', :tag => s.version.to_s }
 
   s.source_files     = 'platforms/iOS/Sources/**/*.swift'
   s.swift_version    = '5.0'

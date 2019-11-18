@@ -13,7 +13,7 @@ import org.json.JSONObject
 import java.io.Serializable
 import java.lang.Exception
 
-class BarcodeScannerOptions(val barcodeTypes: List<BarcodeType>) : Serializable {
+class BarcodeScannerOptions(val barcodeTypes: List<BarcodeType> = listOf()) : Serializable {
     companion object {
         @JvmStatic
         fun fromJSON(barcodeScannerOptions: String): BarcodeScannerOptions {
@@ -26,7 +26,7 @@ class BarcodeScannerOptions(val barcodeTypes: List<BarcodeType>) : Serializable 
                 }
                 BarcodeScannerOptions(convertedTypes)
             } catch (e: Exception) {
-                BarcodeScannerOptions(listOf())
+                BarcodeScannerOptions()
             }
         }
     }
