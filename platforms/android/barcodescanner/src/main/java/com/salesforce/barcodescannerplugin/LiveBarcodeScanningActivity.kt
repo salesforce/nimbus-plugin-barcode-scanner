@@ -45,8 +45,6 @@ class LiveBarcodeScanningActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Utils.verifyPermissionGranted(this)
-
         val barcodeScannerOptions = intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
         if (barcodeScannerOptions != null) {
             val combinedType = barcodeScannerOptions.barcodeTypes.fold(0) { sum, barcodeType -> sum or barcodeType.toVisionBarcodeType() }

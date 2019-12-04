@@ -22,7 +22,12 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 @Extension("barcodeScanner")
-class BarcodeScannerPlugin(val activity: Activity) : NimbusExtension, BarcodeScanner {
+class BarcodeScannerPlugin(private val activity: Activity) : NimbusExtension, BarcodeScanner {
+    init {
+        if (!Utils.arePermissionsGranted(activity)) {
+            Utils.requestPermissions(activity)
+        }
+    }
     private lateinit var scannerCallback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
     private lateinit var barcodeOptions: BarcodeScannerOptions
 
@@ -62,10 +67,15 @@ class BarcodeScannerPlugin(val activity: Activity) : NimbusExtension, BarcodeSca
     }
 
     fun startScanner() {
-        val intent = Intent(activity, LiveBarcodeScanningActivity::class.java)
-        val bundle = Bundle()
-        bundle.putSerializable(LiveBarcodeScanningActivity.OPTIONS_VALUE, barcodeOptions)
-        intent.putExtras(bundle)
-        activity.startActivity(intent)
+        if (Utils.arePermissionsGranted(activity)) {
+            val intent = Intent(activity, LiveBarcodeScanningActivity::class.java)
+            val bundle = Bundle()
+            bundle.putSerializable(LiveBarcodeScanningActivity.OPTIONS_VALUE, barcodeOptions)
+            intent.putExtras(bundle)
+            activity.startActivity(intent)
+        } else {
+            Utils.requestPermissions(activity)
+            scannerCallback(null, "Permissions for camera were not granted")
+        }
     }
 }
