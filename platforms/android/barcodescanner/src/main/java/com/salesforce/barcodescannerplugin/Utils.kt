@@ -34,12 +34,14 @@ object Utils {
 
     private const val TAG = "Utils"
 
-    fun verifyPermissionGranted(activity: Activity) {
-        if (checkSelfPermission(activity, REQUIRED_PERMISSION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                activity, arrayOf(REQUIRED_PERMISSION), /* requestCode= */ 0
-            )
-        }
+    fun arePermissionsGranted(activity: Activity): Boolean {
+        return (checkSelfPermission(activity, REQUIRED_PERMISSION) == PackageManager.PERMISSION_GRANTED)
+    }
+
+    fun requestPermissions(activity: Activity){
+        ActivityCompat.requestPermissions(
+            activity, arrayOf(REQUIRED_PERMISSION), /* requestCode= */ 0
+        )
     }
 
     fun isPortraitMode(context: Context): Boolean =

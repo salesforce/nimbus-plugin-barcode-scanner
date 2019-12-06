@@ -75,21 +75,23 @@ class CameraSource(private val graphicOverlay: GraphicOverlay) {
      * surface holder is used for the preview so frames can be displayed to the user.
      *
      * @param surfaceHolder the surface holder to use for the preview frames.
-     * @throws IOException if the supplied surface holder could not be used as the preview display.
      */
     @Synchronized
-    @Throws(IOException::class)
     internal fun start(surfaceHolder: SurfaceHolder) {
         if (camera != null) return
 
-        camera = createCamera().apply {
-            setPreviewDisplay(surfaceHolder)
-            startPreview()
-        }
+        try {
+            camera = createCamera().apply {
+                setPreviewDisplay(surfaceHolder)
+                startPreview()
+            }
 
-        processingThread = Thread(processingRunnable).apply {
-            processingRunnable.setActive(true)
-            start()
+            processingThread = Thread(processingRunnable).apply {
+                processingRunnable.setActive(true)
+                start()
+            }
+        } catch (ioException: IOException) {
+            Utils.postError(TAG, "There was a problem starting the camera", ioException)
         }
     }
 

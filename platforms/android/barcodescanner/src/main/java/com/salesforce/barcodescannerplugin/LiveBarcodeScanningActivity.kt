@@ -42,11 +42,27 @@ class LiveBarcodeScanningActivity : AppCompatActivity() {
     private var currentWorkflowState: WorkflowState? = null
     private var barcodeDetectorOptions: FirebaseVisionBarcodeDetectorOptions? = null
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (Utils.arePermissionsGranted(this)){
+            initializeCamera()
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!Utils.arePermissionsGranted(this)) {
+            Utils.requestPermissions(this)
+        } else {
+            initializeCamera()
+        }
 
-        Utils.verifyPermissionGranted(this)
+    }
 
+    private fun initializeCamera(){
         val barcodeScannerOptions = intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
         if (barcodeScannerOptions != null) {
             val combinedType = barcodeScannerOptions.barcodeTypes.fold(0) { sum, barcodeType -> sum or barcodeType.toVisionBarcodeType() }
