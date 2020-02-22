@@ -21,12 +21,9 @@ Icon
 ._*
 
 # Android Studio
-.idea/*
-platforms/android/.idea/*
-*.iml
-platforms/android/*.iml
-platforms/android/barcodescanner/*.iml
-platforms/android/demoapp/*.iml
+#.idea/*
+#platforms/android/.idea/*
+#*.iml
 
 # Files that might appear in the root of a volume
 .DocumentRevisions-V100
