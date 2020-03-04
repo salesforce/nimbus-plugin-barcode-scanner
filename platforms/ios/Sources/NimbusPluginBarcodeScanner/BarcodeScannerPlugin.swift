@@ -33,6 +33,10 @@ public class BarcodeScannerPlugin {
                 BarcodeType(rawValue: $0)?.metadataObjectType
             })
 
+        if #available(iOS 13, *) {
+            captureController.modalPresentationStyle = .fullScreen
+        }
+
         captureController.onCapture = { barcode in
             callback(barcode, nil)
         }

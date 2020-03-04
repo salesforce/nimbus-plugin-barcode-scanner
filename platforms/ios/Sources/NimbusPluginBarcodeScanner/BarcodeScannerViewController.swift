@@ -108,43 +108,28 @@ public class BarcodeScannerViewController: UIViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .black
+        view.backgroundColor = .white
         previewLayer.frame = view.layer.bounds
         previewLayer.videoGravity = .resizeAspectFill
         view.layer.addSublayer(previewLayer)
 
-//        // add capture button
-//        let captureButton = UIButton(frame: .zero)
-//        captureButton.translatesAutoresizingMaskIntoConstraints = false
-//        captureButton.setTitle("Capture", for: .normal)
-//        captureButton.addTarget(self, action: #selector(capture(sender:)), for: .touchUpInside)
-//
-//        view.addSubview(captureButton)
-//        view.bottomAnchor.constraint(equalTo: captureButton.bottomAnchor).isActive = true
-//        view.centerXAnchor.constraint(equalTo: captureButton.centerXAnchor).isActive = true
-//        captureButton.sizeToFit()
-
-//        // add target rectangle
-//        let target = UIView(frame: .zero)
-//        target.translatesAutoresizingMaskIntoConstraints = false
-//        target.backgroundColor = .clear
-//        target.layer.borderColor = UIColor.white.withAlphaComponent(0.6).cgColor
-//        target.layer.borderWidth = 2
-//        view.addSubview(target)
-//        target.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.5).isActive = true
-//        target.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-//        target.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
-//        target.heightAnchor.constraint(equalTo: target.widthAnchor, multiplier: 1.667).isActive = true
-
         // add toolbar
-        let toolbar = UIToolbar(frame: CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 44)))
-        toolbar.barStyle = .blackTranslucent
-        toolbar.isTranslucent = true
-        view.addSubview(toolbar)
+        let toolbarView = UIToolbar(frame: CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 44)))
+        toolbar = toolbarView
+        toolbarView.translatesAutoresizingMaskIntoConstraints = false
+        toolbarView.barStyle = .blackTranslucent
+        toolbarView.isTranslucent = true
+        view.addSubview(toolbarView)
+        setupToolbarConstraints(toolbar: toolbarView)
+
+        let overlay = createOverlayView()
+        view.addSubview(overlay)
+        setupOverlayConstraints(overlay: overlay)
+        overlayView = overlay
 
         // cancel button
         let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelCaptureSession(sender:)))
-        toolbar.items = [cancelButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil)]
+        toolbarView.items = [cancelButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil)]
 
         guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
             return
@@ -176,7 +161,6 @@ public class BarcodeScannerViewController: UIViewController {
                 metadataOutput.metadataObjectTypes = targetTypes
             }
         } else {
-//            failed()
             return
         }
     }
@@ -184,8 +168,18 @@ public class BarcodeScannerViewController: UIViewController {
     override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
+#if targetEnvironment(simulator)
+#else
         if !captureSession.isRunning {
             captureSession.startRunning()
+        }
+#endif
+    }
+
+    override public func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        if let overlay = overlayView {
+            overlay.layer.mask = createReticleLayer(overlay: overlay)
         }
     }
 
@@ -197,22 +191,47 @@ public class BarcodeScannerViewController: UIViewController {
         }
     }
 
-    @IBAction func cancelCaptureSession(sender: UIBarButtonItem) {
-        self.dismiss(animated: true, completion: nil)
+    private func createOverlayView() -> UIView {
+        let overlay = UIView()
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        overlay.clipsToBounds = true
+        return overlay
     }
 
-    @IBAction func capture(sender: UIControl) {
+    private func setupToolbarConstraints(toolbar: UIToolbar) {
+        var constraints: [NSLayoutConstraint] = []
+        constraints.append(NSLayoutConstraint(item: toolbar, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 44.0))
+        constraints.append(NSLayoutConstraint(item: toolbar, attribute: .width, relatedBy: .equal, toItem: view, attribute: .width, multiplier: 1.0, constant: 0.0))
+        let guide = view.safeAreaLayoutGuide
+        constraints.append(toolbar.topAnchor.constraint(equalToSystemSpacingBelow: guide.topAnchor, multiplier: 1.0))
+        view.addConstraints(constraints)
+    }
 
-//        let videoPreviewLayerOrientation = previewLayer.connection?.videoOrientation
-//        if let photoOutputConnection = photoOutput.connection(with: .video) {
-//            photoOutputConnection.videoOrientation = videoPreviewLayerOrientation!
-//        }
-//        let photoSettings = AVCapturePhotoSettings()
-//        photoSettings.isHighResolutionPhotoEnabled = true
-//        if !photoSettings.__availablePreviewPhotoPixelFormatTypes.isEmpty {
-//            photoSettings.previewPhotoFormat = [kCVPixelBufferPixelFormatTypeKey as String: photoSettings.__availablePreviewPhotoPixelFormatTypes.first!]
-//        }
-//        self.photoOutput.capturePhoto(with: photoSettings, delegate: self)
+    private func setupOverlayConstraints(overlay: UIView) {
+        guard let toolbarView = toolbar else { return }
+        let views = ["overlay": overlay, "toolbar": toolbarView]
+        let horizontal = NSLayoutConstraint.constraints(withVisualFormat: "H:|[overlay]|", metrics: nil, views: views)
+        let vertical = NSLayoutConstraint.constraints(withVisualFormat: "V:[toolbar][overlay]|", metrics: nil, views: views)
+        view.addConstraints(horizontal)
+        view.addConstraints(vertical)
+    }
+
+    private func createReticleLayer(overlay: UIView) -> CAShapeLayer {
+        let shape = CAShapeLayer()
+        let path = CGMutablePath()
+        let width = overlay.frame.width - 60.0
+        let height: CGFloat = 250.0
+        path.addRoundedRect(in: CGRect(x: overlay.frame.midX - (width / 2), y: 150.0, width: width, height: height), cornerWidth: 8, cornerHeight: 8)
+        path.addRect(CGRect(origin: .zero, size: overlay.frame.size))
+        shape.path = path
+        shape.backgroundColor = UIColor.black.cgColor
+        shape.fillRule = .evenOdd
+        return shape
+    }
+
+    @IBAction func cancelCaptureSession(sender: UIBarButtonItem) {
+        self.dismiss(animated: true, completion: nil)
     }
 
     public func resume() {
@@ -221,6 +240,8 @@ public class BarcodeScannerViewController: UIViewController {
         }
     }
 
+    private var toolbar: UIToolbar?
+    private var overlayView: UIView?
     private let captureSession = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer
     private let targetTypes: [AVMetadataObject.ObjectType]
@@ -229,8 +250,6 @@ public class BarcodeScannerViewController: UIViewController {
 extension BarcodeScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
 
     public func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
-
-
         if let metadataObject = metadataObjects.first {
             guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else { return }
             guard let barcode = Barcode(machineReadableCode: readableObject) else { return }
