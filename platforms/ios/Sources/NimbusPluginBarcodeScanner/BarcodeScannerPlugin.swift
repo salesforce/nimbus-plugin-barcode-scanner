@@ -10,7 +10,7 @@ import WebKit
 import Nimbus
 
 public class BarcodeScannerPlugin {
-    var currentScannerController: BarcodeScannerViewController?
+    weak var currentScannerController: BarcodeScannerViewController?
     var presenter: Presenter
 
     public typealias Presenter = (UIViewController) -> Void
@@ -32,6 +32,10 @@ public class BarcodeScannerPlugin {
             targetTypes: barcodeTypes.compactMap {
                 BarcodeType(rawValue: $0)?.metadataObjectType
             })
+
+        if #available(iOS 13, *) {
+            captureController.modalPresentationStyle = .fullScreen
+        }
 
         captureController.onCapture = { barcode in
             callback(barcode, nil)
