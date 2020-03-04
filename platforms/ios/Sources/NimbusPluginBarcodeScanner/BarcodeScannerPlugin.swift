@@ -9,6 +9,10 @@ import UIKit
 import WebKit
 import Nimbus
 
+public struct ScannerOptions: Decodable {
+    let barcodeTypes: [String]
+}
+
 public class BarcodeScannerPlugin {
     weak var currentScannerController: BarcodeScannerViewController?
     var presenter: Presenter
@@ -19,14 +23,14 @@ public class BarcodeScannerPlugin {
         self.presenter = presenter
     }
     
-    func beginCapture(options: [String: Any],
+    func beginCapture(options: ScannerOptions,
                       callback: @escaping (_ barcode: Barcode?, _ error: String?) -> Void) {
         if let existingCaptureController = currentScannerController {
             existingCaptureController.resume()
             return
         }
 
-        let barcodeTypes = options["barcodeTypes"] as? [String] ?? []
+        let barcodeTypes = options.barcodeTypes
 
         let captureController = BarcodeScannerViewController(
             targetTypes: barcodeTypes.compactMap {
