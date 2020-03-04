@@ -10,7 +10,7 @@ import WebKit
 import Nimbus
 
 public class BarcodeScannerPlugin {
-    var currentScannerController: BarcodeScannerViewController?
+    weak var currentScannerController: BarcodeScannerViewController?
     var presenter: Presenter
 
     public typealias Presenter = (UIViewController) -> Void
