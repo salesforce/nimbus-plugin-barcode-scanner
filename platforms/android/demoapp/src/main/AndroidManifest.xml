@@ -34,9 +34,9 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.salesforce.barcodescannerplugin.LiveBarcodeScanningActivity"
+            android:name="com.salesforce.barcodescannerplugin.BarcodePluginActivity"
             android:exported="false"
-            android:screenOrientation="portrait">
+            android:screenOrientation="fullSensor">
         </activity>
     </application>
 

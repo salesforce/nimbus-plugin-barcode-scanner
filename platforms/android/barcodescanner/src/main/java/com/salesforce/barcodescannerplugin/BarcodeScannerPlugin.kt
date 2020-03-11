@@ -12,6 +12,7 @@ package com.salesforce.barcodescannerplugin
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.salesforce.barcodescannerplugin.barcodedetection.BarcodeErrorEvent
 import com.salesforce.barcodescannerplugin.barcodedetection.BarcodeScannedEvent
 import com.salesforce.nimbus.Extension
@@ -22,7 +23,7 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 @Extension("barcodeScanner")
-class BarcodeScannerPlugin(private val activity: Activity) : NimbusExtension, BarcodeScanner {
+class BarcodeScannerPlugin(private val activity: AppCompatActivity) : NimbusExtension, BarcodeScanner {
     private lateinit var scannerCallback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
     private lateinit var barcodeOptions: BarcodeScannerOptions
 
@@ -62,9 +63,10 @@ class BarcodeScannerPlugin(private val activity: Activity) : NimbusExtension, Ba
     }
 
     fun startScanner() {
-        val intent = Intent(activity, LiveBarcodeScanningActivity::class.java)
+        activity.supportFragmentManager
+        val intent = Intent(activity, BarcodePluginActivity::class.java)
         val bundle = Bundle()
-        bundle.putSerializable(LiveBarcodeScanningActivity.OPTIONS_VALUE, barcodeOptions)
+        bundle.putSerializable(BarcodePluginActivity.OPTIONS_VALUE, barcodeOptions)
         intent.putExtras(bundle)
         activity.startActivity(intent)
     }
