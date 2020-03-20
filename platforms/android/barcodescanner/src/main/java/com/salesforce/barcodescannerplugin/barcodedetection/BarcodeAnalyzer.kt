@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import androidx.core.view.ViewCompat.getRotation
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
@@ -17,6 +16,7 @@ class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcod
 
     @SuppressLint("UnsafeExperimentalUsageError")
     override fun analyze(image: ImageProxy) {
+//        Log.d("Barcode Analyzer", "Checking Image")
         val detector =
             if (options == null) FirebaseVision.getInstance().visionBarcodeDetector else FirebaseVision.getInstance()
                 .getVisionBarcodeDetector(
@@ -29,7 +29,7 @@ class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcod
             .setFormat(FirebaseVisionImageMetadata.IMAGE_FORMAT_YV12)
             .setHeight(image.height)
             .setWidth(image.width)
-            .setRotation(image.imageInfo.rotationDegrees)
+            .setRotation(rotationDegreesToFirebaseRotation(image.imageInfo.rotationDegrees))
             .build()
         val firebaseImage = FirebaseVisionImage.fromByteBuffer(image.planes[0].buffer, metadata)
         detector.detectInImage(firebaseImage)

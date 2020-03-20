@@ -23,9 +23,10 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.common.util.concurrent.ListenableFuture
-import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import com.salesforce.barcodescannerplugin.barcodedetection.BarcodeAnalyzer
 import com.salesforce.barcodescannerplugin.databinding.BarcodePluginActivityBinding
+import kotlinx.android.synthetic.main.barcode_plugin_activity.barcode_frame
+import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.close_button
 import java.util.concurrent.Executors
 
 class BarcodePluginActivity : AppCompatActivity() {
@@ -93,12 +94,14 @@ class BarcodePluginActivity : AppCompatActivity() {
             val camera = cameraProvider.bindToLifecycle(
                 this,
                 cameraSelector,
-                imagePreview
-//                imageAnalysis
+                imagePreview,
+                imageAnalysis
             )
             cameraControl = camera.cameraControl
             cameraInfo = camera.cameraInfo
         }, ContextCompat.getMainExecutor(this))
+
+        close_button.setOnClickListener { onBackPressed() }
     }
 
     companion object {
