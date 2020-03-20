@@ -10,18 +10,23 @@
 package com.salesforce.barcodescannerplugin
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
+import com.salesforce.barcodescannerplugin.barcodedetection.BarcodeAnalyzer
 import com.salesforce.barcodescannerplugin.databinding.BarcodePluginActivityBinding
+import java.util.concurrent.Executors
 
 class BarcodePluginActivity : AppCompatActivity() {
     private lateinit var binding: BarcodePluginActivityBinding
@@ -31,6 +36,9 @@ class BarcodePluginActivity : AppCompatActivity() {
     private lateinit var imagePreview: Preview
     private lateinit var cameraControl: CameraControl
     private lateinit var cameraInfo: CameraInfo
+    private lateinit var imageAnalysis: ImageAnalysis
+    private val executor = Executors.newSingleThreadExecutor()
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,9 +71,19 @@ class BarcodePluginActivity : AppCompatActivity() {
             setTargetAspectRatio(AspectRatio.RATIO_16_9)
             setTargetRotation(previewView.display.rotation)
         }.build()
+
         imagePreview.setSurfaceProvider(previewView.previewSurfaceProvider)
+        imageAnalysis = ImageAnalysis.Builder().apply {
+            setImageQueueDepth(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+        }.build()
+
+        imageAnalysis.setAnalyzer(executor, BarcodeAnalyzer ({ qrCodes ->
+            qrCodes.forEach {
+                Log.d("MainActivity", "QR Code detected: ${it.rawValue}.")
+            }}))
 
         val cameraSelector = CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
+
         cameraProviderFuture.addListener(Runnable {
             val cameraProvider = cameraProviderFuture.get()
             cameraProvider.bindToLifecycle(this, cameraSelector)
@@ -76,6 +94,7 @@ class BarcodePluginActivity : AppCompatActivity() {
                 this,
                 cameraSelector,
                 imagePreview
+//                imageAnalysis
             )
             cameraControl = camera.cameraControl
             cameraInfo = camera.cameraInfo
