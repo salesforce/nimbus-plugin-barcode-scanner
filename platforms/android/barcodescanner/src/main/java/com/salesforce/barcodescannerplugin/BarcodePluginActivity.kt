@@ -9,30 +9,19 @@
 
 package com.salesforce.barcodescannerplugin
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.util.Size
-import android.graphics.Matrix
 import android.os.Bundle
-import android.view.Surface
-import android.view.TextureView
-import android.view.ViewGroup
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
+import androidx.camera.core.CameraControl
+import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.CameraX
 import androidx.camera.core.Preview
-import androidx.camera.core.impl.PreviewConfig
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.common.util.concurrent.ListenableFuture
 import com.salesforce.barcodescannerplugin.databinding.BarcodePluginActivityBinding
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 class BarcodePluginActivity : AppCompatActivity() {
     private lateinit var binding: BarcodePluginActivityBinding
@@ -40,6 +29,8 @@ class BarcodePluginActivity : AppCompatActivity() {
     private lateinit var cameraProviderFuture : ListenableFuture<ProcessCameraProvider>
     private lateinit var previewView: PreviewView
     private lateinit var imagePreview: Preview
+    private lateinit var cameraControl: CameraControl
+    private lateinit var cameraInfo: CameraInfo
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,6 +69,16 @@ class BarcodePluginActivity : AppCompatActivity() {
         cameraProviderFuture.addListener(Runnable {
             val cameraProvider = cameraProviderFuture.get()
             cameraProvider.bindToLifecycle(this, cameraSelector)
+        }, ContextCompat.getMainExecutor(this))
+        cameraProviderFuture.addListener(Runnable {
+            val cameraProvider = cameraProviderFuture.get()
+            val camera = cameraProvider.bindToLifecycle(
+                this,
+                cameraSelector,
+                imagePreview
+            )
+            cameraControl = camera.cameraControl
+            cameraInfo = camera.cameraInfo
         }, ContextCompat.getMainExecutor(this))
     }
 
