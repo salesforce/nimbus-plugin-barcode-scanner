@@ -38,7 +38,6 @@ class BarcodePluginActivity : AppCompatActivity() {
     private lateinit var binding: BarcodePluginActivityBinding
 
     private lateinit var cameraProviderFuture : ListenableFuture<ProcessCameraProvider>
-    private lateinit var viewFinder: TextureView
     private lateinit var previewView: PreviewView
     private lateinit var imagePreview: Preview
 
@@ -53,7 +52,7 @@ class BarcodePluginActivity : AppCompatActivity() {
         if (!Utils.arePermissionsGranted(this)) {
             Utils.requestPermissions(this)
         } else {
-            viewFinder.post { initializeCamera() }
+            previewView.post { initializeCamera() }
         }
     }
 
@@ -64,7 +63,7 @@ class BarcodePluginActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (Utils.arePermissionsGranted(this)){
-            viewFinder.post { initializeCamera() }
+            previewView.post { initializeCamera() }
         }
     }
 

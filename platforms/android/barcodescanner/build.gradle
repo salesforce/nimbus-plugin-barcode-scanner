@@ -4,10 +4,6 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
 android {
-    dataBinding{
-        enabled = true
-    }
-
     compileSdkVersion 29
 
     defaultConfig {
@@ -29,6 +25,13 @@ android {
     }
     testOptions {
         unitTests.returnDefaultValues = true
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    dataBinding{
+        enabled = true
     }
 }
 
