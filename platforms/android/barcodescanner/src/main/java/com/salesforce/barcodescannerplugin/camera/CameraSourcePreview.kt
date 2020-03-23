@@ -57,12 +57,12 @@ class CameraSourcePreview(context: Context, attrs: AttributeSet) : FrameLayout(c
         if (startRequested && surfaceAvailable) {
             cameraSource?.start(surfaceView.holder)
             requestLayout()
-            graphicOverlay?.let { overlay ->
-                cameraSource?.let {
-                    overlay.setCameraInfo(it)
-                }
-                overlay.clear()
-            }
+//            graphicOverlay?.let { overlay ->
+//                cameraSource?.let {
+//                    overlay.setCameraInfo(it)
+//                }
+//                overlay.clear()
+//            }
             startRequested = false
         }
     }
