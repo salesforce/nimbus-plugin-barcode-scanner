@@ -17,10 +17,8 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
-import androidx.databinding.DataBindingUtil
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
-import com.salesforce.barcodescannerplugin.databinding.BarcodePluginActivityBinding
 import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.*
 import org.greenrobot.eventbus.EventBus
 import java.util.concurrent.ExecutorService
@@ -31,11 +29,11 @@ import kotlin.math.min
 
 class BarcodePluginActivity : AppCompatActivity() {
 
-    private lateinit var binding: BarcodePluginActivityBinding
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var viewFinder: PreviewView
     private lateinit var executor: ExecutorService
 
+    private lateinit var barcodeAnalyzer: BarcodeAnalyzer
     private var preview: Preview? = null
     private var imageAnalysis: ImageAnalysis? = null
 
@@ -43,11 +41,10 @@ class BarcodePluginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        executor = Executors.newSingleThreadExecutor()
+        setContentView(R.layout.barcode_plugin_activity)
+        viewFinder = findViewById(R.id.preview_view)
 
-        binding = DataBindingUtil.setContentView(this, R.layout.barcode_plugin_activity)
-        binding.lifecycleOwner = this
-        viewFinder = binding.previewView
+        executor = Executors.newSingleThreadExecutor()
 
         if (!Utils.arePermissionsGranted(this)) {
             Utils.requestPermissions(this)
@@ -58,9 +55,10 @@ class BarcodePluginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-
         // Shut down our background executor
         executor.shutdown()
+
+        preview = null
     }
 
     override fun onRequestPermissionsResult(
@@ -93,7 +91,8 @@ class BarcodePluginActivity : AppCompatActivity() {
     }
 
     private fun initializeCamera() {
-        val barcodeScannerOptions = intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
+        val barcodeScannerOptions =
+            intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
 
         val metrics = DisplayMetrics().also { viewFinder.display.getRealMetrics(it) }
         val rotation = viewFinder.display.rotation
@@ -116,6 +115,12 @@ class BarcodePluginActivity : AppCompatActivity() {
             }.build()
 
             preview?.setSurfaceProvider(viewFinder.previewSurfaceProvider)
+            barcodeAnalyzer = BarcodeAnalyzer({ qrCodes ->
+                if (qrCodes.isNotEmpty()) {
+                    val barcode = qrCodes.first()
+                    onBarcodeFound(barcode)
+                }
+            }, barcodeScannerOptions)
 
             // Image Analysis
             imageAnalysis = ImageAnalysis.Builder()
@@ -127,13 +132,7 @@ class BarcodePluginActivity : AppCompatActivity() {
                 .build()
                 .also {
                     it.setAnalyzer(
-                        executor,
-                        BarcodeAnalyzer({ qrCodes ->
-                            if (qrCodes.isNotEmpty()) {
-                                val barcode = qrCodes.first()
-                                onBarcodeFound(barcode)
-                            }
-                        }, barcodeScannerOptions)
+                        executor, barcodeAnalyzer
                     )
                 }
 
@@ -152,7 +151,8 @@ class BarcodePluginActivity : AppCompatActivity() {
 
         }, ContextCompat.getMainExecutor(this))
 
-        close_button.setOnClickListener { onBackPressed() }
+        close_button.setOnClickListener {
+            onBackPressed() }
     }
 
     private fun onBarcodeFound(barcode: FirebaseVisionBarcode) {
@@ -164,7 +164,6 @@ class BarcodePluginActivity : AppCompatActivity() {
                 )
             )
         )
-        viewFinder.removeAllViews()
         this.finish()
     }
 

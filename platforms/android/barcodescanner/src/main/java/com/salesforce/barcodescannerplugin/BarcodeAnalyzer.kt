@@ -11,7 +11,6 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
 
 class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit, private val barcodeScannerOptions: BarcodeScannerOptions? = null): ImageAnalysis.Analyzer {
-
     private val detector: FirebaseVisionBarcodeDetector by lazy {
         if (barcodeScannerOptions == null) {
             FirebaseVision.getInstance().visionBarcodeDetector
@@ -38,9 +37,9 @@ class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcod
         val firebaseImage = FirebaseVisionImage.fromByteBuffer(image.planes[0].buffer, metadata)
         detector.detectInImage(firebaseImage)
             .addOnSuccessListener(onBarcodeDetected)
-            .addOnFailureListener {Log.e("BarcodeAnalyzer", "Fail", it)}
+            .addOnFailureListener { Log.e("BarcodeAnalyzer", "Fail", it) }
 
-            image.close()
+        image.close()
     }
 
     private fun rotationDegreesToFirebaseRotation(rotationDegrees: Int): Int {
