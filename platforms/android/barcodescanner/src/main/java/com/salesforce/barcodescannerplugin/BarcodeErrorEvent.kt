@@ -7,6 +7,6 @@
  *
  */
 
-package com.salesforce.barcodescannerplugin.barcodedetection
+package com.salesforce.barcodescannerplugin
 
 class BarcodeErrorEvent(val errorMessage: String)

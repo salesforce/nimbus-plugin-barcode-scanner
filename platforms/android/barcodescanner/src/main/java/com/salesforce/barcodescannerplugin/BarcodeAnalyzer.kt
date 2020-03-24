@@ -1,6 +1,5 @@
-package com.salesforce.barcodescannerplugin.barcodedetection
+package com.salesforce.barcodescannerplugin
 
-import android.annotation.SuppressLint
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
@@ -9,21 +8,18 @@ import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
-import java.nio.ByteBuffer
+import java.lang.Exception
 
 class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit, private val options: FirebaseVisionBarcodeDetectorOptions? = null): ImageAnalysis.Analyzer {
 
 
-    @SuppressLint("UnsafeExperimentalUsageError")
     override fun analyze(image: ImageProxy) {
-//        Log.d("Barcode Analyzer", "Checking Image")
+        try {
         val detector =
             if (options == null) FirebaseVision.getInstance().visionBarcodeDetector else FirebaseVision.getInstance()
                 .getVisionBarcodeDetector(
                     options
                 )
-
-//        val firebaseImage = FirebaseVisionImage.fromMediaImage(image.image!!, image.imageInfo.rotationDegrees)
 
         val metadata = FirebaseVisionImageMetadata.Builder()
             .setFormat(FirebaseVisionImageMetadata.IMAGE_FORMAT_YV12)
@@ -36,16 +32,12 @@ class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcod
             .addOnSuccessListener(onBarcodeDetected)
             .addOnFailureListener {Log.e("BarcodeAnalyzer", "Fail", it)}
 
-        image.close()
+            image.close()
+        } catch (ex: Exception){
+            Log.e("BarcodeAnalyzer", "Failed to close camera", ex)
+        }
 
     }
-    private fun ByteBuffer.toByteArray(): ByteArray {
-        rewind()    // Rewind the buffer to zero
-        val data = ByteArray(remaining())
-        get(data)   // Copy the buffer into a byte array
-        return data // Return the byte array
-    }
-
 
     private fun rotationDegreesToFirebaseRotation(rotationDegrees: Int): Int {
         return when (rotationDegrees) {
@@ -56,5 +48,4 @@ class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcod
             else -> throw IllegalArgumentException("Not supported")
         }
     }
-
 }

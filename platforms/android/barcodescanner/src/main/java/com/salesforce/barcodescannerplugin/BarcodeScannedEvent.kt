@@ -7,7 +7,6 @@
  *
  */
 
-package com.salesforce.barcodescannerplugin.camera
+package com.salesforce.barcodescannerplugin
 
-/** Metadata info of a camera frame.  */
-class FrameMetadata(val width: Int, val height: Int, val rotation: Int)
+class BarcodeScannedEvent(val barcode: BarcodeScannerResult)

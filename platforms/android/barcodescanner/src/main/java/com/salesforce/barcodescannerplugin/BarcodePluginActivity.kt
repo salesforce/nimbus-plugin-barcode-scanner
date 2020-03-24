@@ -13,54 +13,54 @@ import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.AspectRatio
-import androidx.camera.core.Camera
-import androidx.camera.core.CameraControl
-import androidx.camera.core.CameraInfo
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.common.util.concurrent.ListenableFuture
-import com.salesforce.barcodescannerplugin.barcodedetection.BarcodeAnalyzer
-import com.salesforce.barcodescannerplugin.camera.GraphicOverlay
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import com.salesforce.barcodescannerplugin.databinding.BarcodePluginActivityBinding
-import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.close_button
+import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.*
+import org.greenrobot.eventbus.EventBus
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 class BarcodePluginActivity : AppCompatActivity() {
-    private lateinit var binding: BarcodePluginActivityBinding
 
-    private lateinit var cameraProviderFuture : ListenableFuture<ProcessCameraProvider>
-    private lateinit var previewView: PreviewView
-    private lateinit var imagePreview: Preview
-    private lateinit var cameraControl: CameraControl
-    private lateinit var cameraInfo: CameraInfo
-    private lateinit var imageAnalysis: ImageAnalysis
-    private val executor = Executors.newSingleThreadExecutor()
-    private var graphicOverlay: GraphicOverlay? = null
+    private lateinit var binding: BarcodePluginActivityBinding
+    private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
+    private lateinit var viewFinder: PreviewView
+    private lateinit var executor: ExecutorService
+
+    private var preview: Preview? = null
+    private var imageAnalysis: ImageAnalysis? = null
 
     private var camera: Camera? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        executor = Executors.newSingleThreadExecutor()
+
         binding = DataBindingUtil.setContentView(this, R.layout.barcode_plugin_activity)
         binding.lifecycleOwner = this
-        previewView = binding.previewView
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        graphicOverlay = findViewById(R.id.camera_preview_graphic_overlay)
+        viewFinder = binding.previewView
 
         if (!Utils.arePermissionsGranted(this)) {
             Utils.requestPermissions(this)
         } else {
-            previewView.post { initializeCamera() }
+            viewFinder.post { initializeCamera() }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // Shut down our background executor
+        executor.shutdown()
     }
 
     override fun onRequestPermissionsResult(
@@ -69,13 +69,12 @@ class BarcodePluginActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (Utils.arePermissionsGranted(this)){
-            previewView.post { initializeCamera() }
+        if (Utils.arePermissionsGranted(this)) {
+            viewFinder.post { initializeCamera() }
         }
     }
 
     /**
-     *  [androidx.camera.core.ImageAnalysisConfig] requires enum value of
      *  [androidx.camera.core.AspectRatio]. Currently it has values of 4:3 & 16:9.
      *
      *  Detecting the most suitable ratio for dimensions provided in @params by counting absolute
@@ -93,12 +92,13 @@ class BarcodePluginActivity : AppCompatActivity() {
         return AspectRatio.RATIO_16_9
     }
 
-
     private fun initializeCamera() {
-        val metrics = DisplayMetrics().also { previewView.display.getRealMetrics(it) }
-        val rotation = previewView.display.rotation
+        val metrics = DisplayMetrics().also { viewFinder.display.getRealMetrics(it) }
+        val rotation = viewFinder.display.rotation
 
         val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
+
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         // Camera Selector
         val cameraSelector =
@@ -108,12 +108,12 @@ class BarcodePluginActivity : AppCompatActivity() {
             val cameraProvider = cameraProviderFuture.get()
 
             // Image Preview
-            imagePreview = Preview.Builder().apply {
+            preview = Preview.Builder().apply {
                 setTargetAspectRatio(screenAspectRatio)
                 setTargetRotation(rotation)
             }.build()
 
-            imagePreview.setSurfaceProvider(previewView.previewSurfaceProvider)
+            preview?.setSurfaceProvider(viewFinder.previewSurfaceProvider)
 
             // Image Analysis
             imageAnalysis = ImageAnalysis.Builder()
@@ -124,13 +124,15 @@ class BarcodePluginActivity : AppCompatActivity() {
                 .setTargetRotation(rotation)
                 .build()
                 .also {
-
-
-                    it.setAnalyzer(executor, BarcodeAnalyzer({ qrCodes ->
-                        qrCodes.forEach {
-                            Log.d(TAG, "QR Code detected: ${it.rawValue}.")
-                        }
-                    }))
+                    it.setAnalyzer(
+                        executor,
+                        BarcodeAnalyzer({ qrCodes ->
+                            if (qrCodes.isNotEmpty()) {
+                                val barcode = qrCodes.first()
+                                onBarcodeFound(barcode)
+                            }
+                        })
+                    )
                 }
 
             // Must unbind the use-cases before rebinding them
@@ -140,7 +142,7 @@ class BarcodePluginActivity : AppCompatActivity() {
                 // A variable number of use-cases can be passed here -
                 // camera provides access to CameraControl & CameraInfo
                 camera = cameraProvider.bindToLifecycle(
-                    this, cameraSelector, imagePreview, imageAnalysis
+                    this, cameraSelector, preview, imageAnalysis
                 )
             } catch (exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
@@ -149,6 +151,19 @@ class BarcodePluginActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
 
         close_button.setOnClickListener { onBackPressed() }
+    }
+
+    private fun onBarcodeFound(barcode: FirebaseVisionBarcode) {
+        EventBus.getDefault().postSticky(
+            BarcodeScannedEvent(
+                BarcodeScannerResult(
+                    BarcodeType.fromVisionBarcode(barcode.format),
+                    barcode.displayValue ?: ""
+                )
+            )
+        )
+        viewFinder.removeAllViews()
+        this.finish()
     }
 
     companion object {

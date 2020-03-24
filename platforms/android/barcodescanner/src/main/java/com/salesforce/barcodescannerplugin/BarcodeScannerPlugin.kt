@@ -12,8 +12,6 @@ package com.salesforce.barcodescannerplugin
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.salesforce.barcodescannerplugin.barcodedetection.BarcodeErrorEvent
-import com.salesforce.barcodescannerplugin.barcodedetection.BarcodeScannedEvent
 import com.salesforce.nimbus.Extension
 import com.salesforce.nimbus.ExtensionMethod
 import com.salesforce.nimbus.NimbusExtension
@@ -61,7 +59,7 @@ class BarcodeScannerPlugin(private val activity: AppCompatActivity) : NimbusExte
         EventBus.getDefault().removeStickyEvent(event)
     }
 
-    fun startScanner() {
+    private fun startScanner() {
         activity.supportFragmentManager
         val intent = Intent(activity, BarcodePluginActivity::class.java)
         val bundle = Bundle()
