@@ -93,6 +93,8 @@ class BarcodePluginActivity : AppCompatActivity() {
     }
 
     private fun initializeCamera() {
+        val barcodeScannerOptions = intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
+
         val metrics = DisplayMetrics().also { viewFinder.display.getRealMetrics(it) }
         val rotation = viewFinder.display.rotation
 
@@ -131,7 +133,7 @@ class BarcodePluginActivity : AppCompatActivity() {
                                 val barcode = qrCodes.first()
                                 onBarcodeFound(barcode)
                             }
-                        })
+                        }, barcodeScannerOptions)
                     )
                 }
 

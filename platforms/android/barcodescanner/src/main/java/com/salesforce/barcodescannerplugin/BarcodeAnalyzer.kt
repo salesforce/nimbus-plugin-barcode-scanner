@@ -5,22 +5,30 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
-import java.lang.Exception
 
-class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit, private val options: FirebaseVisionBarcodeDetectorOptions? = null): ImageAnalysis.Analyzer {
+class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit, private val barcodeScannerOptions: BarcodeScannerOptions? = null): ImageAnalysis.Analyzer {
 
-
-    override fun analyze(image: ImageProxy) {
-        try {
-        val detector =
-            if (options == null) FirebaseVision.getInstance().visionBarcodeDetector else FirebaseVision.getInstance()
+    private val detector: FirebaseVisionBarcodeDetector by lazy {
+        if (barcodeScannerOptions == null) {
+            FirebaseVision.getInstance().visionBarcodeDetector
+        } else {
+            val combinedType =
+                barcodeScannerOptions.barcodeTypes.fold(0) { sum, barcodeType -> sum or barcodeType.toVisionBarcodeType() }
+            val options =
+                FirebaseVisionBarcodeDetectorOptions.Builder().setBarcodeFormats(combinedType)
+                    .build()
+            FirebaseVision.getInstance()
                 .getVisionBarcodeDetector(
                     options
                 )
+        }
+    }
 
+    override fun analyze(image: ImageProxy) {
         val metadata = FirebaseVisionImageMetadata.Builder()
             .setFormat(FirebaseVisionImageMetadata.IMAGE_FORMAT_YV12)
             .setHeight(image.height)
@@ -33,10 +41,6 @@ class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcod
             .addOnFailureListener {Log.e("BarcodeAnalyzer", "Fail", it)}
 
             image.close()
-        } catch (ex: Exception){
-            Log.e("BarcodeAnalyzer", "Failed to close camera", ex)
-        }
-
     }
 
     private fun rotationDegreesToFirebaseRotation(rotationDegrees: Int): Int {
