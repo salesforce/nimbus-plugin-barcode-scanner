@@ -57,8 +57,6 @@ class BarcodePluginActivity : AppCompatActivity() {
         super.onDestroy()
         // Shut down our background executor
         executor.shutdown()
-
-        preview = null
     }
 
     override fun onRequestPermissionsResult(
@@ -128,6 +126,7 @@ class BarcodePluginActivity : AppCompatActivity() {
                 .setTargetAspectRatio(screenAspectRatio)
                 // Set initial target rotation, we will have to call this again if rotation changes
                 // during the lifecycle of this use case
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setTargetRotation(rotation)
                 .build()
                 .also {
