@@ -9,8 +9,11 @@ import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
+import java.util.concurrent.TimeUnit
 
 class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit, private val barcodeScannerOptions: BarcodeScannerOptions? = null): ImageAnalysis.Analyzer {
+    private var lastAnalyzedTimestamp = 0L
+
     private val detector: FirebaseVisionBarcodeDetector by lazy {
         if (barcodeScannerOptions == null) {
             FirebaseVision.getInstance().visionBarcodeDetector
@@ -28,17 +31,21 @@ class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcod
     }
 
     override fun analyze(image: ImageProxy) {
-        val metadata = FirebaseVisionImageMetadata.Builder()
-            .setFormat(FirebaseVisionImageMetadata.IMAGE_FORMAT_YV12)
-            .setHeight(image.height)
-            .setWidth(image.width)
-            .setRotation(rotationDegreesToFirebaseRotation(image.imageInfo.rotationDegrees))
-            .build()
-        val firebaseImage = FirebaseVisionImage.fromByteBuffer(image.planes[0].buffer, metadata)
-        detector.detectInImage(firebaseImage)
-            .addOnSuccessListener(onBarcodeDetected)
-            .addOnFailureListener { Log.e("BarcodeAnalyzer", "Fail", it) }
-
+        val currentTimestamp = System.currentTimeMillis()
+        if (currentTimestamp - lastAnalyzedTimestamp >=
+            TimeUnit.SECONDS.toMillis(1)
+        ) {
+            val metadata = FirebaseVisionImageMetadata.Builder()
+                .setFormat(FirebaseVisionImageMetadata.IMAGE_FORMAT_YV12)
+                .setHeight(image.height)
+                .setWidth(image.width)
+                .setRotation(rotationDegreesToFirebaseRotation(image.imageInfo.rotationDegrees))
+                .build()
+            val firebaseImage = FirebaseVisionImage.fromByteBuffer(image.planes[0].buffer, metadata)
+            detector.detectInImage(firebaseImage)
+                .addOnSuccessListener(onBarcodeDetected)
+                .addOnFailureListener { Log.e("BarcodeAnalyzer", "Fail", it) }
+        }
         image.close()
     }
 

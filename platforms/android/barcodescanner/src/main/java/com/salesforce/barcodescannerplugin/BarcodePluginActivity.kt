@@ -9,22 +9,22 @@
 
 package com.salesforce.barcodescannerplugin
 
-import android.graphics.Canvas
 import android.os.Bundle
-import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.util.Log
-import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.*
+import androidx.camera.core.AspectRatio
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import kotlinx.android.synthetic.main.barcode_plugin_activity.barcode_frame
-import kotlinx.android.synthetic.main.barcode_plugin_activity.preview_view
-import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.*
+import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.close_button
 import org.greenrobot.eventbus.EventBus
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -75,17 +75,7 @@ class BarcodePluginActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     *  [androidx.camera.core.AspectRatio]. Currently it has values of 4:3 & 16:9.
-     *
-     *  Detecting the most suitable ratio for dimensions provided in @params by counting absolute
-     *  of preview ratio to one of the provided values.
-     *
-     *  @param width - preview width
-     *  @param height - preview height
-     *  @return suitable aspect ratio
-     */
-    private fun aspectRatio(width: Int, height: Int): Int {
+    private fun getAspectRation(width: Int, height: Int): Int {
         val previewRatio = max(width, height).toDouble() / min(width, height)
         if (abs(previewRatio - RATIO_4_3_VALUE) <= abs(previewRatio - RATIO_16_9_VALUE)) {
             return AspectRatio.RATIO_4_3
@@ -100,7 +90,7 @@ class BarcodePluginActivity : AppCompatActivity() {
         val metrics = DisplayMetrics().also { viewFinder.display.getRealMetrics(it) }
         val rotation = viewFinder.display.rotation
 
-        val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
+        val screenAspectRatio = getAspectRation(metrics.widthPixels, metrics.heightPixels)
 
         barcode_frame.layoutParams.height = metrics.heightPixels / 2
         barcode_frame.layoutParams.width = metrics.widthPixels / 2
@@ -131,11 +121,9 @@ class BarcodePluginActivity : AppCompatActivity() {
 
             // Image Analysis
             imageAnalysis = ImageAnalysis.Builder()
-                // We request aspect ratio but no resolution
                 .setTargetAspectRatio(screenAspectRatio)
-                // Set initial target rotation, we will have to call this again if rotation changes
-                // during the lifecycle of this use case
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setImageQueueDepth(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setTargetRotation(rotation)
                 .build()
                 .also {
@@ -148,8 +136,6 @@ class BarcodePluginActivity : AppCompatActivity() {
             cameraProvider.unbindAll()
 
             try {
-                // A variable number of use-cases can be passed here -
-                // camera provides access to CameraControl & CameraInfo
                 camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageAnalysis
                 )
