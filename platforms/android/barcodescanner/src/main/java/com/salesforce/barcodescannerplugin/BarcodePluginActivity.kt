@@ -9,9 +9,12 @@
 
 package com.salesforce.barcodescannerplugin
 
+import android.graphics.Canvas
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.util.Log
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -19,6 +22,8 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
+import kotlinx.android.synthetic.main.barcode_plugin_activity.barcode_frame
+import kotlinx.android.synthetic.main.barcode_plugin_activity.preview_view
 import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.*
 import org.greenrobot.eventbus.EventBus
 import java.util.concurrent.ExecutorService
@@ -96,6 +101,10 @@ class BarcodePluginActivity : AppCompatActivity() {
         val rotation = viewFinder.display.rotation
 
         val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
+
+        barcode_frame.layoutParams.height = metrics.heightPixels / 2
+        barcode_frame.layoutParams.width = metrics.widthPixels / 2
+        barcode_frame.requestLayout()
 
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
