@@ -5,7 +5,7 @@ references:
   export_gservices_key: &export_gservices_key
     run:
       name: Export Google Services key environment variable
-      command: echo 'export GOOGLE_SERVICES ="$GOOGLE_SERVICES"' >> $BASH_ENV
+      command: echo 'export GOOGLE_SERVICES="$GOOGLE_SERVICES"' >> $BASH_ENV
   decode_gservices_key: &decode_gservices_key
     run:
       name: Decode Google Services key
@@ -16,9 +16,9 @@ jobs:
       - image: circleci/android:api-28-node
 
     steps:
+      - checkout
       - *export_gservices_key
       - *decode_gservices_key
-      - checkout
 
       - run:
           name: Build Android
