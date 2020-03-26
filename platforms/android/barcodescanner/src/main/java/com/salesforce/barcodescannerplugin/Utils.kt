@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2019, Salesforce.com, inc.
+ * Copyright (c) 2020, Salesforce.com, inc.
  * All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -22,10 +22,13 @@ object Utils {
     private const val REQUIRED_PERMISSION = "android.permission.CAMERA"
 
     fun arePermissionsGranted(activity: Activity): Boolean {
-        return (checkSelfPermission(activity, REQUIRED_PERMISSION) == PackageManager.PERMISSION_GRANTED)
+        return (checkSelfPermission(
+            activity,
+            REQUIRED_PERMISSION
+        ) == PackageManager.PERMISSION_GRANTED)
     }
 
-    fun requestPermissions(activity: Activity){
+    fun requestPermissions(activity: Activity) {
         ActivityCompat.requestPermissions(
             activity, arrayOf(REQUIRED_PERMISSION), /* requestCode= */ 0
         )

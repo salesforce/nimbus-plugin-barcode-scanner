@@ -1,3 +1,12 @@
+/*
+ *
+ * Copyright (c) 2020, Salesforce.com, inc.
+ * All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause
+ * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ *
+ */
+
 package com.salesforce.barcodescannerplugin
 
 import androidx.camera.core.ImageAnalysis
@@ -11,7 +20,10 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
 import com.salesforce.barcodescannerplugin.Utils.postError
 import java.util.concurrent.TimeUnit
 
-class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit, private val barcodeScannerOptions: BarcodeScannerOptions? = null): ImageAnalysis.Analyzer {
+class BarcodeAnalyzer(
+    private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit,
+    private val barcodeScannerOptions: BarcodeScannerOptions? = null
+) : ImageAnalysis.Analyzer {
     private var lastAnalyzedTimestamp = 0L
 
     private val detector: FirebaseVisionBarcodeDetector by lazy {
@@ -61,6 +73,5 @@ class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcod
 
     companion object {
         val TAG = "BarcodeAnalyzer"
-
     }
 }
