@@ -9,7 +9,7 @@ references:
   decode_gservices_key: &decode_gservices_key
     run:
       name: Decode Google Services key
-      command: echo $GOOGLE_SERVICES | base64 -di > ${HOME}/barcodescanner/google-services.json
+      command: echo $GOOGLE_SERVICES | base64 -di > platforms/android/barcodescanner/google-services.json
 jobs:
   build-and-test-android:
     docker:
