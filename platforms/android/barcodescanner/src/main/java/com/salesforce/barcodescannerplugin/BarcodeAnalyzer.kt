@@ -1,6 +1,5 @@
 package com.salesforce.barcodescannerplugin
 
-import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.firebase.ml.vision.FirebaseVision
@@ -9,6 +8,7 @@ import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
+import com.salesforce.barcodescannerplugin.Utils.postError
 import java.util.concurrent.TimeUnit
 
 class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit, private val barcodeScannerOptions: BarcodeScannerOptions? = null): ImageAnalysis.Analyzer {
@@ -44,7 +44,7 @@ class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcod
             val firebaseImage = FirebaseVisionImage.fromByteBuffer(image.planes[0].buffer, metadata)
             detector.detectInImage(firebaseImage)
                 .addOnSuccessListener(onBarcodeDetected)
-                .addOnFailureListener { Log.e("BarcodeAnalyzer", "Fail", it) }
+                .addOnFailureListener { postError(TAG, "Failed to scan barcode", it) }
         }
         image.close()
     }
@@ -57,5 +57,10 @@ class BarcodeAnalyzer (private val onBarcodeDetected: (List<FirebaseVisionBarcod
             270 -> FirebaseVisionImageMetadata.ROTATION_270
             else -> throw IllegalArgumentException("Not supported")
         }
+    }
+
+    companion object {
+        val TAG = "BarcodeAnalyzer"
+
     }
 }

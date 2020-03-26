@@ -11,7 +11,6 @@ package com.salesforce.barcodescannerplugin
 
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
@@ -23,6 +22,7 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
+import com.salesforce.barcodescannerplugin.Utils.postError
 import kotlinx.android.synthetic.main.barcode_plugin_activity.barcode_frame
 import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.close_button
 import org.greenrobot.eventbus.EventBus
@@ -140,7 +140,7 @@ class BarcodePluginActivity : AppCompatActivity() {
                     this, cameraSelector, preview, imageAnalysis
                 )
             } catch (exc: Exception) {
-                Log.e(TAG, "Use case binding failed", exc)
+                postError(TAG, "Failed to start camera", exc)
             }
 
         }, ContextCompat.getMainExecutor(this))
