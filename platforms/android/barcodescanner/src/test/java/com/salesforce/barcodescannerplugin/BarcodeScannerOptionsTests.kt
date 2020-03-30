@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2019, Salesforce.com, inc.
+ * Copyright (c) 2020, Salesforce.com, inc.
  * All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -14,11 +14,6 @@ import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
 class BarcodeScannerOptionsTests {
     @Test
     fun `convert json to barcodeScannerOptions`() {
@@ -28,7 +23,14 @@ class BarcodeScannerOptionsTests {
             }
         """.trimIndent()
         val convertedType = BarcodeScannerOptions.fromJSON(originalOptions)
-        assertEquals(listOf(BarcodeType.CODE128, BarcodeType.CODE39, BarcodeType.UPCA, BarcodeType.QR), convertedType.barcodeTypes)
+        assertEquals(
+            listOf(
+                BarcodeType.CODE128,
+                BarcodeType.CODE39,
+                BarcodeType.UPCA,
+                BarcodeType.QR
+            ), convertedType.barcodeTypes
+        )
     }
 
     @Test
@@ -38,7 +40,7 @@ class BarcodeScannerOptionsTests {
     }
 
     @Test
-    fun `passing no barcode types defaults to empty list`(){
+    fun `passing no barcode types defaults to empty list`() {
         val barcodeScannerOptions = BarcodeScannerOptions()
         assert(barcodeScannerOptions.barcodeTypes.count() == 0)
     }

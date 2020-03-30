@@ -1,12 +1,14 @@
 ### Android Plugin
 
-Nimbus Plugin for scanning Barcodes
+Nimbus Plugin for scanning barcodes
 
 Contains 2 projects
 
-## barcodescanner  
+## barcodescanner
 
 This project contains the logic and activity for scanning barcodes, as well as the BarcodeScannerPlugin to wire up to your consumer app's webview.
+
+Before running this plugin, [add Firebase to your Android project](https://firebase.google.com/docs/android/setup).
 
 ## demoapp
 
