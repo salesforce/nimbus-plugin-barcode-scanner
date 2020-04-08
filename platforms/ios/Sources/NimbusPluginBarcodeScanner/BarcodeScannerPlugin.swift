@@ -63,8 +63,8 @@ public class BarcodeScannerPlugin {
 
 }
 
-extension BarcodeScannerPlugin: NimbusExtension {
-    public func bindToWebView(webView: WKWebView) {
+extension BarcodeScannerPlugin: Plugin {
+    public func bind(to webView: WKWebView, bridge: Bridge) {
         let connection = webView.addConnection(to: self, as: "barcodeScanner")
         connection.bind(BarcodeScannerPlugin.beginCapture, as: "beginCapture")
         connection.bind(BarcodeScannerPlugin.resumeCapture, as: "resumeCapture")
