@@ -12,19 +12,17 @@ package com.salesforce.barcodescannerplugin
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.salesforce.nimbus.Extension
-import com.salesforce.nimbus.ExtensionMethod
-import com.salesforce.nimbus.NimbusExtension
+import com.salesforce.nimbus.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
-@Extension("barcodeScanner")
+@PluginOptions("barcodeScanner")
 class BarcodeScannerPlugin(private val activity: AppCompatActivity) : NimbusExtension, BarcodeScanner {
     private lateinit var scannerCallback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
     private lateinit var barcodeOptions: BarcodeScannerOptions
 
-    @ExtensionMethod
+    @BoundMethod
     override fun beginCapture(
         options: BarcodeScannerOptions?,
         callback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
@@ -37,12 +35,12 @@ class BarcodeScannerPlugin(private val activity: AppCompatActivity) : NimbusExte
         startScanner()
     }
 
-    @ExtensionMethod
+    @BoundMethod
     override fun resumeCapture() {
         startScanner()
     }
 
-    @ExtensionMethod
+    @BoundMethod
     override fun endCapture() {
         EventBus.getDefault().unregister(this)
     }
