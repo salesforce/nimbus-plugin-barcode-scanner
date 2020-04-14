@@ -14,12 +14,12 @@ import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
 import com.salesforce.barcodescannerplugin.BarcodeScannerPlugin
 import com.salesforce.barcodescannerplugin.BarcodeScannerPluginBinder
-import com.salesforce.nimbus.NimbusBridge
+import com.salesforce.nimbus.Bridge
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    private val nimbusBridge = NimbusBridge()
+    private val nimbusBridge = Bridge()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
