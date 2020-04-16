@@ -18,7 +18,7 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 @PluginOptions("barcodeScanner")
-class BarcodeScannerPlugin(private val activity: AppCompatActivity) : NimbusExtension, BarcodeScanner {
+class BarcodeScannerPlugin(private val activity: AppCompatActivity) : Plugin, BarcodeScanner {
     private lateinit var scannerCallback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
     private lateinit var barcodeOptions: BarcodeScannerOptions
 
