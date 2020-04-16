@@ -11,6 +11,7 @@
 <head>
     <script src="nimbus.js"></script>
     <script>
+        let barcodeScanner = window._barcodeScanner;
         function beginScanning() {
             if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
                 document.querySelector('#beginScanning').style.visibility = 'hidden'
