@@ -15,7 +15,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.salesforce.barcodescannerplugin.BarcodeScannerPlugin
 import com.salesforce.barcodescannerplugin.BarcodeScannerPluginBinder
 import com.salesforce.nimbus.Bridge
-import kotlinx.android.synthetic.main.activity_main.*
+import com.salesforce.nimbusjs.NimbusJSUtilities
+import kotlinx.android.synthetic.main.activity_main.plugin_webview
+import java.nio.charset.StandardCharsets
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,7 +28,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         nimbusBridge.add(BarcodeScannerPluginBinder(BarcodeScannerPlugin(this)))
         nimbusBridge.attach(plugin_webview)
-        plugin_webview.loadUrl("file:///android_asset/webview.html")
+        val sourceHtml = this.resources.assets.open("webview.html")
+        val htmlStream = NimbusJSUtilities.injectedNimbusStream(sourceHtml.buffered(), this)
+        val html = htmlStream.bufferedReader(StandardCharsets.UTF_8).readText()
+        plugin_webview.loadDataWithBaseURL("", html,"text/html",StandardCharsets.UTF_8.name(), "")
         plugin_webview.settings.javaScriptEnabled = true
         WebView.setWebContentsDebuggingEnabled(true)
     }
