@@ -1,192 +1,226 @@
-(function() {
-  "use strict";
+//
+// Copyright (c) 2019, Salesforce.com, inc.
+// All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause
+// For full license text, see the LICENSE file in the repo root or
+// https://opensource.org/licenses/BSD-3-Clause
+//
 
-  //
-  // Copyright (c) 2019, Salesforce.com, inc.
-  // All rights reserved.
-  // SPDX-License-Identifier: BSD-3-Clause
-  // For full license text, see the LICENSE file in the repo root or
-  // https://opensource.org/licenses/BSD-3-Clause
-  //
-  class Nimbus {
-    constructor() {
-      // There can be many promises so creating a storage for later look-up.
-      this.promises = {};
-      this.callbacks = {};
-      // Dictionary to manage message&subscriber relationship.
-      this.listenerMap = {};
-      // influenced from
-      // https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-      this.uuidv4 = () => {
-        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c => {
-          const asNumber = Number(c);
-          return (
-            asNumber ^
-            (crypto.getRandomValues(new Uint8Array(1))[0] &
-              (15 >> (asNumber / 4)))
-          ).toString(16);
+var __nimbus = (function () {
+    'use strict';
+
+    function __spreadArrays() {
+        for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+        for (var r = Array(s), k = 0, i = 0; i < il; i++)
+            for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+                r[k] = a[j];
+        return r;
+    }
+
+    //
+    var plugins = {};
+    // Store promise functions for later invocation
+    var uuidsToPromises = {};
+    // Store callback functions for later invocation
+    var uuidsToCallbacks = {};
+    // Store event listener functions for later invocation
+    var eventNameToListeners = {};
+    // influenced from
+    // https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+    var uuidv4 = function () {
+        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, function (c) {
+            var asNumber = Number(c);
+            return (asNumber ^
+                (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (asNumber / 4)))).toString(16);
         });
-      };
-      this.promisify = src => {
-        let dest = {};
-        Object.keys(src).forEach(key => {
-          let func = src[key];
-          dest[key] = (...args) => {
-            args = this.cloneArguments(args);
-            args = args.map(arg => {
-              if (typeof arg === "object") {
-                return JSON.stringify(arg);
-              }
-              return arg;
-            });
-            let result = func.call(src, ...args);
-            if (result !== undefined) {
-              result = JSON.parse(result);
-            }
-            return Promise.resolve(result);
-          };
-        });
-        return dest;
-      };
-      this.cloneArguments = args => {
-        let clonedArgs = [];
+    };
+    var cloneArguments = function (args) {
+        var clonedArgs = [];
         for (var i = 0; i < args.length; ++i) {
-          if (typeof args[i] === "function") {
-            const callbackId = this.uuidv4();
-            this.callbacks[callbackId] = args[i];
-            // TODO: this should generalize better, perhaps with an explicit platform
-            // check?
-            if (
-              typeof _nimbus !== "undefined" &&
-              _nimbus.makeCallback !== undefined
-            ) {
-              // TODO: Android passes only the callbackId string, whereas iOS passes an
-              // object with the callbackId property. These need to be merged and handled
-              // the same way to eliminate extraneous code paths
-              clonedArgs.push(callbackId);
-            } else {
-              clonedArgs.push({ callbackId });
+            if (typeof args[i] === "function") {
+                var callbackId = uuidv4();
+                uuidsToCallbacks[callbackId] = args[i];
+                // TODO: this should generalize better, perhaps with an explicit platform
+                // check?
+                if (typeof _nimbus !== "undefined" &&
+                    _nimbus.makeCallback !== undefined) {
+                    // TODO: Android passes only the callbackId string, whereas iOS passes an
+                    // object with the callbackId property. These need to be merged and handled
+                    // the same way to eliminate extraneous code paths
+                    clonedArgs.push(callbackId);
+                }
+                else {
+                    clonedArgs.push({ callbackId: callbackId });
+                }
             }
-          } else {
-            clonedArgs.push(args[i]);
-          }
+            else if (typeof args[i] === "object") {
+                clonedArgs.push(JSON.stringify(args[i]));
+            }
+            else {
+                clonedArgs.push(args[i]);
+            }
         }
         return clonedArgs;
-      };
-      this.callCallback = (callbackId, args) => {
-        if (this.callbacks[callbackId]) {
-          this.callbacks[callbackId](...args);
+    };
+    var promisify = function (src) {
+        var dest = {};
+        Object.keys(src).forEach(function (key) {
+            var func = src[key];
+            dest[key] = function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                args = cloneArguments(args);
+                var result = func.call.apply(func, __spreadArrays([src], args));
+                if (result !== undefined) {
+                    result = JSON.parse(result);
+                }
+                return Promise.resolve(result);
+            };
+        });
+        return dest;
+    };
+    var callCallback = function (callbackId) {
+        var args = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            args[_i - 1] = arguments[_i];
         }
-      };
-      // TODO: This version is called by Android, callCallback is called by iOS. The
-      // two need to be consolidated.
-      this.callCallback2 = (callbackId, ...args) => {
-        this.callCallback(callbackId, args);
-      };
-      this.releaseCallback = callbackId => {
-        delete this.callbacks[callbackId];
-      };
-      // Native side will callback this method. Match the callback to stored promise
-      // in the storage
-      this.resolvePromise = (promiseUuid, data, error) => {
+        if (uuidsToCallbacks[callbackId]) {
+            uuidsToCallbacks[callbackId].apply(uuidsToCallbacks, args);
+        }
+    };
+    var releaseCallback = function (callbackId) {
+        delete uuidsToCallbacks[callbackId];
+    };
+    // Native side will callback this method. Match the callback to stored promise
+    // in the storage
+    var resolvePromise = function (promiseUuid, data, error) {
         if (error) {
-          this.promises[promiseUuid].reject(data);
-        } else {
-          this.promises[promiseUuid].resolve(data);
+            uuidsToPromises[promiseUuid].reject(data);
+        }
+        else {
+            uuidsToPromises[promiseUuid].resolve(data);
         }
         // remove reference to stored promise
-        delete this.promises[promiseUuid];
-      };
-      /**
-       * Broadcast a message to subscribed listeners.  Listeners
-       * can receive data associated with the message for more
-       * processing.
-       *
-       * @param message String message that is uniquely
-       *     registered as a key in the
-       *                listener map.  Multiple listeners can
-       * get triggered from a message.
-       * @param arg Swift encodable type.
-       * @return Number of listeners that were called by the
-       *     message.
-       */
-      this.broadcastMessage = (message, arg) => {
-        let messageListeners = this.listenerMap[message];
+        delete uuidsToPromises[promiseUuid];
+    };
+    var broadcastMessage = function (message, arg) {
+        var messageListeners = eventNameToListeners[message];
         var handlerCallCount = 0;
         if (messageListeners) {
-          messageListeners.forEach(listener => {
-            if (arg) {
-              listener(arg);
-            } else {
-              listener();
-            }
-            handlerCallCount++;
-          });
+            messageListeners.forEach(function (listener) {
+                if (arg) {
+                    listener(arg);
+                }
+                else {
+                    listener();
+                }
+                handlerCallCount++;
+            });
         }
         return handlerCallCount;
-      };
-      /**
-       * Subscribe a listener to message.
-       *
-       * @param message String message that is uniquely registered as a key
-       *     in the
-       *                listener map.  Multiple listeners can get triggered
-       * from a message.
-       * @param listener A method that should be triggered when a message is
-       *     broadcasted.
-       */
-      this.subscribeMessage = (message, listener) => {
-        let messageListeners = this.listenerMap[message];
+    };
+    var subscribeMessage = function (message, listener) {
+        var messageListeners = eventNameToListeners[message];
         if (!messageListeners) {
-          messageListeners = [];
+            messageListeners = [];
         }
         messageListeners.push(listener);
-        this.listenerMap[message] = messageListeners;
-      };
-      /**
-       * Unsubscribe a listener from a message. Unsubscribed listener
-       * will not be triggered.
-       *
-       * @param message String message that is uniquely registered as a
-       *     key in the
-       *                listener map.  Multiple listeners can get
-       * triggered from a message.
-       * @param listener A method that should be triggered when a
-       *     message is broadcasted.
-       */
-      this.unsubscribeMessage = (message, listener) => {
-        let messageListeners = this.listenerMap[message];
+        eventNameToListeners[message] = messageListeners;
+    };
+    var unsubscribeMessage = function (message, listener) {
+        var messageListeners = eventNameToListeners[message];
         if (messageListeners) {
-          let counter = 0;
-          let found = false;
-          for (counter; counter < messageListeners.length; counter++) {
-            if (messageListeners[counter] === listener) {
-              found = true;
-              break;
+            var counter = 0;
+            var found = false;
+            for (counter; counter < messageListeners.length; counter++) {
+                if (messageListeners[counter] === listener) {
+                    found = true;
+                    break;
+                }
             }
-          }
-          if (found) {
-            messageListeners.splice(counter, 1);
-            this.listenerMap[message] = messageListeners;
-          }
+            if (found) {
+                messageListeners.splice(counter, 1);
+                eventNameToListeners[message] = messageListeners;
+            }
         }
-      };
-      if (
-        typeof _nimbus !== "undefined" &&
-        _nimbus.nativeExtensionNames !== undefined
-      ) {
+    };
+    // Android plugin import
+    if (typeof _nimbus !== "undefined" && _nimbus.nativePluginNames !== undefined) {
         // we're on Android, need to wrap native extension methods
-        let extensionNames = JSON.parse(_nimbus.nativeExtensionNames());
-        extensionNames.forEach(extension => {
-          Object.assign(window, {
-            [extension]: this.promisify(window[`_${extension}`])
-          });
+        var extensionNames = JSON.parse(_nimbus.nativePluginNames());
+        extensionNames.forEach(function (extension) {
+            var _a;
+            Object.assign(plugins, (_a = {},
+                _a[extension] = Object.assign(plugins["" + extension] || {}, promisify(window["_" + extension])),
+                _a));
         });
-      }
     }
-  }
-  const nimbus = new Nimbus();
-  window.nimbus = nimbus;
+    // iOS plugin import
+    if (typeof __nimbusPluginExports !== "undefined") {
+        Object.keys(__nimbusPluginExports).forEach(function (pluginName) {
+            var _a;
+            var plugin = {};
+            __nimbusPluginExports[pluginName].forEach(function (method) {
+                var _a;
+                Object.assign(plugin, (_a = {},
+                    _a[method] = function () {
+                        var functionArgs = cloneArguments(Array.from(arguments));
+                        return new Promise(function (resolve, reject) {
+                            var promiseId = uuidv4();
+                            uuidsToPromises[promiseId] = { resolve: resolve, reject: reject };
+                            window.webkit.messageHandlers[pluginName].postMessage({
+                                method: method,
+                                args: functionArgs,
+                                promiseId: promiseId
+                            });
+                        });
+                    },
+                    _a));
+            });
+            Object.assign(plugins, (_a = {},
+                _a[pluginName] = plugin,
+                _a));
+        });
+    }
+    var nimbusBuilder = {
+        plugins: plugins
+    };
+    Object.defineProperties(nimbusBuilder, {
+        callCallback: {
+            value: callCallback
+        },
+        releaseCallback: {
+            value: releaseCallback
+        },
+        resolvePromise: {
+            value: resolvePromise
+        },
+        broadcastMessage: {
+            value: broadcastMessage
+        },
+        subscribeMessage: {
+            value: subscribeMessage
+        },
+        unsubscribeMessage: {
+            value: unsubscribeMessage
+        }
+    });
+    var nimbus = nimbusBuilder;
+    // When the page unloads, reject all Promises for native-->web calls.
+    window.addEventListener("unload", function () {
+        if (typeof _nimbus !== "undefined") {
+            _nimbus.pageUnloaded();
+        }
+        else if (typeof window.webkit !== "undefined") {
+            window.webkit.messageHandlers._nimbus.postMessage({
+                method: "pageUnloaded"
+            });
+        }
+    });
+    window.__nimbus = nimbus;
 
-  return nimbus;
-})();
+    return nimbus;
+
+}());
