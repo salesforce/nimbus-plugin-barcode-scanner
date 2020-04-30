@@ -9,9 +9,24 @@
 
 <html>
 <head>
-    <script>
+</head>
+<body>
+    <input id='beginScanning' type='button' onClick='beginScanning()' value='Scan Barcode'/>
+    <input id='resumeScanning' type='button' onClick='resumeScanning()' value='Resume Scanning' style='visibility:hidden'/>
+    <input id='endScanning' type='button' onClick='endScanning()' value='End Scanning' style='visibility:hidden'/>
+    <div id="result"></div>
+</body>
+<script>
 
 let barcodeScanner = __nimbus.plugins.barcodeScanner;
+let deviceInfoPlugin = __nimbus.plugins.DeviceInfoPlugin;
+let resultText = document.querySelector("#result");
+if (typeof deviceInfoPlugin !== undefined && deviceInfoPlugin !== null){
+    deviceInfoPlugin.getDeviceInfo().then( (deviceInfo) => {
+        console.log(deviceInfo);
+        resultText.textContent = "Click Scan Barcode to begin. Current version: " + deviceInfo.appVersion
+    });
+}
 function beginScanning() {
     if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
         document.querySelector('#beginScanning').style.visibility = 'hidden'
@@ -45,11 +60,4 @@ function resumeScanning() {
     }
 }
     </script>
-</head>
-<body>
-    <input id='beginScanning' type='button' onClick='beginScanning()' value='Scan Barcode'/>
-    <input id='resumeScanning' type='button' onClick='resumeScanning()' value='Resume Scanning' style='visibility:hidden'/>
-    <input id='endScanning' type='button' onClick='endScanning()' value='End Scanning' style='visibility:hidden'/>
-    <div id="result">Scan Barcode to see result</div>
-</body>
 </html>

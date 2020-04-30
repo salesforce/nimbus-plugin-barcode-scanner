@@ -58,12 +58,6 @@ class BarcodePluginActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        // Shut down our background executor
-        executor.shutdown()
-    }
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -111,7 +105,9 @@ class BarcodePluginActivity : AppCompatActivity() {
                 setTargetRotation(rotation)
             }.build()
 
-            preview?.setSurfaceProvider(viewFinder.previewSurfaceProvider)
+            viewFinder.preferredImplementationMode = PreviewView.ImplementationMode.TEXTURE_VIEW
+            preview?.setSurfaceProvider(viewFinder.createSurfaceProvider(camera?.cameraInfo))
+
             barcodeAnalyzer = BarcodeAnalyzer({ qrCodes ->
                 if (qrCodes.isNotEmpty()) {
                     val barcode = qrCodes.first()
@@ -139,12 +135,14 @@ class BarcodePluginActivity : AppCompatActivity() {
                 camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageAnalysis
                 )
+                
             } catch (exc: Exception) {
                 postError(TAG, "Failed to start camera", exc)
             }
         }, ContextCompat.getMainExecutor(this))
 
         close_button.setOnClickListener {
+            shutDownCamera()
             onBackPressed()
         }
     }
@@ -158,7 +156,15 @@ class BarcodePluginActivity : AppCompatActivity() {
                 )
             )
         )
+        shutDownCamera()
         this.finish()
+    }
+
+    private fun shutDownCamera(){
+        imageAnalysis?.clearAnalyzer()
+        imageAnalysis = null
+        camera = null
+        executor.shutdown()
     }
 
     companion object {
