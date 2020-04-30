@@ -111,7 +111,6 @@ class BarcodePluginActivity : AppCompatActivity() {
                 setTargetRotation(rotation)
             }.build()
 
-            preview?.setSurfaceProvider(viewFinder.previewSurfaceProvider)
             barcodeAnalyzer = BarcodeAnalyzer({ qrCodes ->
                 if (qrCodes.isNotEmpty()) {
                     val barcode = qrCodes.first()
@@ -139,6 +138,9 @@ class BarcodePluginActivity : AppCompatActivity() {
                 camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageAnalysis
                 )
+
+                viewFinder.preferredImplementationMode = PreviewView.ImplementationMode.TEXTURE_VIEW
+                preview?.setSurfaceProvider(viewFinder.createSurfaceProvider(camera?.cameraInfo))
             } catch (exc: Exception) {
                 postError(TAG, "Failed to start camera", exc)
             }

@@ -12,6 +12,12 @@
     <script>
 
 let barcodeScanner = __nimbus.plugins.barcodeScanner;
+let deviceInfoPlugin = __nimbus.plugins.DeviceInfoPlugin;
+if (typeof deviceInfoPlugin !== undefined && deviceInfoPlugin !== null){
+    deviceInfoPlugin.getDeviceInfo().then( (deviceInfo) => {
+        console.log(deviceInfo);
+    });
+}
 function beginScanning() {
     if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
         document.querySelector('#beginScanning').style.visibility = 'hidden'
