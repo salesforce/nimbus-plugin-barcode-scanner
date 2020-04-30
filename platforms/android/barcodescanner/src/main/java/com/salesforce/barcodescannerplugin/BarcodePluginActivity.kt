@@ -11,6 +11,7 @@ package com.salesforce.barcodescannerplugin
 
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
@@ -56,12 +57,6 @@ class BarcodePluginActivity : AppCompatActivity() {
         } else {
             viewFinder.post { initializeCamera() }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        // Shut down our background executor
-        executor.shutdown()
     }
 
     override fun onRequestPermissionsResult(
@@ -148,6 +143,7 @@ class BarcodePluginActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
 
         close_button.setOnClickListener {
+            shutDownCamera()
             onBackPressed()
         }
     }
@@ -161,7 +157,15 @@ class BarcodePluginActivity : AppCompatActivity() {
                 )
             )
         )
+        shutDownCamera()
         this.finish()
+    }
+
+    private fun shutDownCamera(){
+        imageAnalysis?.clearAnalyzer()
+        imageAnalysis = null
+        camera = null
+        executor.shutdown()
     }
 
     companion object {
