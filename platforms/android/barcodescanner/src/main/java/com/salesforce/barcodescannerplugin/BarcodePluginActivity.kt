@@ -138,7 +138,7 @@ class BarcodePluginActivity : AppCompatActivity() {
                 camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageAnalysis
                 )
-
+                
                 viewFinder.preferredImplementationMode = PreviewView.ImplementationMode.TEXTURE_VIEW
                 preview?.setSurfaceProvider(viewFinder.createSurfaceProvider(camera?.cameraInfo))
             } catch (exc: Exception) {
