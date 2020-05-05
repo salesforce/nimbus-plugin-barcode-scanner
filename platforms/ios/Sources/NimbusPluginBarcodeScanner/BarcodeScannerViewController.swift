@@ -9,7 +9,7 @@ import AVFoundation
 import CoreGraphics
 import UIKit
 
-public enum BarcodeType: String, Codable {
+public enum BarcodeType: String, Codable, CaseIterable {
     case code128
     case code39
     case code93
