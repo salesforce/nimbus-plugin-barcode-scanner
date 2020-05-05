@@ -36,7 +36,10 @@ class BarcodeScannerPlugin(private val activity: AppCompatActivity) : Plugin, Ba
     }
 
     @BoundMethod
-    override fun resumeCapture() {
+    override fun resumeCapture(
+        callback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
+    ) {
+        scannerCallback = callback
         startScanner()
     }
 
