@@ -52,7 +52,13 @@ public class BarcodeScannerPlugin {
         presenter(captureController)
     }
 
-    func resumeCapture() {
+    func resumeCapture(callback: @escaping (_ barcode: Barcode?, _ error: String?) -> Void) {
+        currentScannerController?.onCapture = { barcode in
+            callback(barcode, nil)
+        }
+        currentScannerController?.onError = { error in
+            callback(nil, "failed")
+        }
         currentScannerController?.resume()
     }
 
