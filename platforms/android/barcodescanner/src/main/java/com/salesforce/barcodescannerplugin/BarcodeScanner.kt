@@ -15,7 +15,9 @@ interface BarcodeScanner {
         callback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
     )
 
-    fun resumeCapture()
+    fun resumeCapture(
+        callback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
+    )
 
     fun endCapture()
 }
