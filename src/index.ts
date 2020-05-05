@@ -22,7 +22,7 @@ export enum BarcodeType {
   ITF = "itf",
   UPC_E = "upce",
   PDF_417 = "pdf417",
-  QR = "qr"
+  QR = "qr",
 }
 
 export interface BarcodeScannerOptions {
@@ -36,8 +36,8 @@ export interface BarcodeScanner {
     callback: (barcode: Barcode, error: String) => void
   ): void;
 
-  // Resume an existing scanning session
-  resumeCapture(): void;
+  // Resume an existing scanning session using options from beginCapture
+  resumeCapture(callback: (barcode: Barcode, error: String) => void): void;
 
   // End a capture session and dismiss the scanner
   endCapture(): void;
