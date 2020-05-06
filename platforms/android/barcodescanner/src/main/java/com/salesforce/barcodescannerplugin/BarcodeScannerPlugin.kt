@@ -61,7 +61,6 @@ class BarcodeScannerPlugin(private val activity: AppCompatActivity) : Plugin, Ba
     }
 
     private fun startScanner() {
-        activity.supportFragmentManager
         val intent = Intent(activity, BarcodePluginActivity::class.java)
         val bundle = Bundle()
         bundle.putSerializable(BarcodePluginActivity.OPTIONS_VALUE, barcodeOptions)
