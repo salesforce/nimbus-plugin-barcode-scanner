@@ -12,7 +12,8 @@
 </head>
 <body>
     <input id='scanSingleBarcode' type='button' onClick='startScanning(false)' value='Scan Single Barcode'/>
-    <input id='scanContinuousBarcode' type='button' onClick='startScanning(true)' value='Scan Continuous Barcodes'/>
+<!--    TODO: Add this back in when activity does not close modal.  Otherwise this will close and start another activity each time-->
+<!--    <input id='scanContinuousBarcode' type='button' onClick='startScanning(true)' value='Scan Continuous Barcodes'/>-->
     <div id="result"></div>
 </body>
 <script>
@@ -31,7 +32,7 @@ let barcodeScannerCallback =
     (barcode, error) => {
         console.log(barcode);
         if (barcode !== null) {
-            barcodesScanned.push("type: " + barcode.type + " value: " + decodeURIComponent(barcode.value) + "\n");
+            barcodesScanned.push("type: " + barcode.type + " value: " + decodeURIComponent(barcode.value));
             setResult(barcodesScanned);
             if (continuousScan){
                 barcodeScanner.resumeCapture(barcodeScannerCallback);
