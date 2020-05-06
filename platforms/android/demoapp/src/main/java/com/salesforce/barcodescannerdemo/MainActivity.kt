@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         val htmlStream = NimbusJSUtilities.injectedNimbusStream(sourceHtml.buffered(), this)
         val html = htmlStream.bufferedReader(StandardCharsets.UTF_8).readText()
         plugin_webview.loadDataWithBaseURL("", html,"text/html",StandardCharsets.UTF_8.name(), "")
+
         plugin_webview.settings.javaScriptEnabled = true
         WebView.setWebContentsDebuggingEnabled(true)
     }
