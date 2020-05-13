@@ -9,9 +9,8 @@
   -->
 
 <resources>
-  <dimen name="top_action_bar_padding_horizontal">8dp</dimen>
   <dimen name="top_action_bar_height">64dp</dimen>
-  <dimen name="top_action_button_padding">12dp</dimen>
+  <dimen name="top_action_button_padding">4dp</dimen>
   <dimen name="bounding_box_stroke_width">1dp</dimen>
   <dimen name="bounding_box_confirmed_stroke_width">2dp</dimen>
   <dimen name="bounding_box_corner_radius">12dp</dimen>

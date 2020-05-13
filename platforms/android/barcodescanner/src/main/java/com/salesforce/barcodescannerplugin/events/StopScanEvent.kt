@@ -7,6 +7,9 @@
  *
  */
 
-package com.salesforce.barcodescannerplugin
+package com.salesforce.barcodescannerplugin.events
 
-class BarcodeErrorEvent(val errorMessage: String)
+/**
+ * event posted to event bus when called to stop scanner
+ */
+class StopScanEvent

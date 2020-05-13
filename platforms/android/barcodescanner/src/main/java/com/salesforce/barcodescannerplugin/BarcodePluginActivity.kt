@@ -9,6 +9,8 @@
 
 package com.salesforce.barcodescannerplugin
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.DisplayMetrics
 import androidx.appcompat.app.AppCompatActivity
@@ -20,13 +22,17 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import com.salesforce.barcodescannerplugin.Utils.postError
+import com.salesforce.barcodescannerplugin.events.ScanStartedEvent
+import com.salesforce.barcodescannerplugin.events.StopScanEvent
+import com.salesforce.barcodescannerplugin.events.SuccessfulScanEvent
 import kotlinx.android.synthetic.main.barcode_plugin_activity.barcode_frame
 import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.close_button
 import org.greenrobot.eventbus.EventBus
-import java.util.concurrent.ExecutorService
+import org.greenrobot.eventbus.Subscribe
 import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.max
@@ -36,7 +42,8 @@ class BarcodePluginActivity : AppCompatActivity() {
 
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var viewFinder: PreviewView
-    private lateinit var executor: ExecutorService
+    private val executor = Executors.newSingleThreadExecutor()
+    private val eventBus = EventBus.getDefault()
 
     private lateinit var barcodeAnalyzer: BarcodeAnalyzer
     private var preview: Preview? = null
@@ -45,17 +52,43 @@ class BarcodePluginActivity : AppCompatActivity() {
     private var camera: Camera? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.barcode_plugin_activity)
         viewFinder = findViewById(R.id.preview_view)
 
-        executor = Executors.newSingleThreadExecutor()
+        barcodeAnalyzer = BarcodeAnalyzer({ qrCodes ->
+            if (qrCodes.isNotEmpty()) {
+                barcodeAnalyzer.isPaused = true
+                val barcode = qrCodes.first()
+                onBarcodeFound(barcode)
+            }
+        }, getIntentBarcodeScannerOptions())
 
         if (!Utils.arePermissionsGranted(this)) {
             Utils.requestPermissions(this)
         } else {
             viewFinder.post { initializeCamera() }
         }
+
+        eventBus.register(this)
+        eventBus.post(ScanStartedEvent())
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        barcodeAnalyzer?.isPaused = false
+    }
+
+    override fun onDestroy() {
+        // shutdown camera and executor
+        imageAnalysis?.clearAnalyzer()
+        imageAnalysis = null
+        camera = null
+        executor.shutdown()
+
+        eventBus.unregister(this)
+        super.onDestroy()
     }
 
     override fun onRequestPermissionsResult(
@@ -69,18 +102,20 @@ class BarcodePluginActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * when received StopScanEvent, finish the activity
+     */
+    @Subscribe
+    fun onMessage(event: StopScanEvent) = finish()
+
     private fun getAspectRation(width: Int, height: Int): Int {
         val previewRatio = max(width, height).toDouble() / min(width, height)
-        if (abs(previewRatio - RATIO_4_3_VALUE) <= abs(previewRatio - RATIO_16_9_VALUE)) {
-            return AspectRatio.RATIO_4_3
-        }
-        return AspectRatio.RATIO_16_9
+        return if (abs(previewRatio - RATIO_4_3_VALUE) <= abs(previewRatio - RATIO_16_9_VALUE))
+            AspectRatio.RATIO_4_3
+        else AspectRatio.RATIO_16_9
     }
 
     private fun initializeCamera() {
-        val barcodeScannerOptions =
-            intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
-
         val metrics = DisplayMetrics().also { viewFinder.display.getRealMetrics(it) }
         val rotation = viewFinder.display.rotation
 
@@ -108,13 +143,6 @@ class BarcodePluginActivity : AppCompatActivity() {
             viewFinder.preferredImplementationMode = PreviewView.ImplementationMode.TEXTURE_VIEW
             preview?.setSurfaceProvider(viewFinder.createSurfaceProvider(camera?.cameraInfo))
 
-            barcodeAnalyzer = BarcodeAnalyzer({ qrCodes ->
-                if (qrCodes.isNotEmpty()) {
-                    val barcode = qrCodes.first()
-                    onBarcodeFound(barcode)
-                }
-            }, barcodeScannerOptions)
-
             // Image Analysis
             imageAnalysis = ImageAnalysis.Builder()
                 .setTargetAspectRatio(screenAspectRatio)
@@ -135,36 +163,36 @@ class BarcodePluginActivity : AppCompatActivity() {
                 camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageAnalysis
                 )
-                
+
             } catch (exc: Exception) {
                 postError(TAG, "Failed to start camera", exc)
             }
         }, ContextCompat.getMainExecutor(this))
 
         close_button.setOnClickListener {
-            shutDownCamera()
             onBackPressed()
         }
     }
 
+    /**
+     * return the barcode scanner option passed into activity in the intent
+     */
+    private fun getIntentBarcodeScannerOptions() =
+        intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
+
+
     private fun onBarcodeFound(barcode: FirebaseVisionBarcode) {
-        EventBus.getDefault().postSticky(
-            BarcodeScannedEvent(
-                BarcodeScannerResult(
-                    BarcodeType.fromVisionBarcode(barcode.format),
-                    barcode.displayValue ?: ""
+        // only notify SuccessfulScan when activity is resumed
+        if (lifecycle.currentState == Lifecycle.State.RESUMED) {
+            eventBus.postSticky(
+                SuccessfulScanEvent(
+                    BarcodeScannerResult(
+                        BarcodeType.fromVisionBarcode(barcode.format),
+                        barcode.displayValue ?: ""
+                    )
                 )
             )
-        )
-        shutDownCamera()
-        this.finish()
-    }
-
-    private fun shutDownCamera(){
-        imageAnalysis?.clearAnalyzer()
-        imageAnalysis = null
-        camera = null
-        executor.shutdown()
+        }
     }
 
     companion object {
@@ -172,5 +200,17 @@ class BarcodePluginActivity : AppCompatActivity() {
         const val OPTIONS_VALUE = "OptionsValue"
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
+
+        /**
+         * create the intent for launch BarcodePluginActivity, set intent flag to SINGLE_TOP to only allow one BarcodePluginActivity
+         *
+         * @param context the context for the intent
+         * @param barcodeOptions
+         */
+        fun getIntent(context: Context, barcodeOptions: BarcodeScannerOptions) =
+            Intent(context, BarcodePluginActivity::class.java).apply {
+                putExtras(Bundle().apply { putSerializable(OPTIONS_VALUE, barcodeOptions) })
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
     }
 }

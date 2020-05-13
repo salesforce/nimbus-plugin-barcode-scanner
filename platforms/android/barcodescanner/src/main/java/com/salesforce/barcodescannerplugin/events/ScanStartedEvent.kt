@@ -7,6 +7,9 @@
  *
  */
 
-package com.salesforce.barcodescannerplugin
+package com.salesforce.barcodescannerplugin.events
 
-class BarcodeScannedEvent(val barcode: BarcodeScannerResult)
+/**
+ * event posted to event bus when scanner is started to doing the scan
+ */
+class ScanStartedEvent

@@ -27,21 +27,34 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        nimbusBridge.add(BarcodeScannerPluginBinder(BarcodeScannerPlugin(this)))
-        nimbusBridge.add(DeviceInfoPluginBinder(DeviceInfoPlugin(this)))
-        nimbusBridge.attach(plugin_webview)
-        val sourceHtml = this.resources.assets.open("webview.html")
-        val htmlStream = NimbusJSUtilities.injectedNimbusStream(sourceHtml.buffered(), this)
-        val html = htmlStream.bufferedReader(StandardCharsets.UTF_8).readText()
-        plugin_webview.loadDataWithBaseURL("", html,"text/html",StandardCharsets.UTF_8.name(), "")
 
-        plugin_webview.settings.javaScriptEnabled = true
-        WebView.setWebContentsDebuggingEnabled(true)
+        setContentView(R.layout.activity_main)
+
+        // initial the demo webview html content
+        initializeDemoWebViewHtmlContent()
+
+        // register the plugins with the webview in the nimbus bridge
+        nimbusBridge.add(DeviceInfoPluginBinder(DeviceInfoPlugin(this)))
+        val barcodeScannerPlugin = BarcodeScannerPlugin(this)
+        nimbusBridge.add(BarcodeScannerPluginBinder(barcodeScannerPlugin))
+        nimbusBridge.attach(plugin_webview)
+
+        /**
+         * TODO: discuss with team to add barcodeScannerPlugin.onWebViewAttached() to help solve demo activity destroy/recreate issue.
+         */
     }
 
     override fun onDestroy() {
         super.onDestroy()
         nimbusBridge.detach()
+    }
+
+    private fun initializeDemoWebViewHtmlContent() {
+        WebView.setWebContentsDebuggingEnabled(true)
+
+        val sourceHtml = this.resources.assets.open("webview.html")
+        val htmlStream = NimbusJSUtilities.injectedNimbusStream(sourceHtml.buffered(), this)
+        val html = htmlStream.bufferedReader(StandardCharsets.UTF_8).readText()
+        plugin_webview.loadDataWithBaseURL("", html, "text/html", StandardCharsets.UTF_8.name(), "")
     }
 }

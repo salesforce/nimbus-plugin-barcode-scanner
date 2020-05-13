@@ -14,6 +14,7 @@ import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
+import com.salesforce.barcodescannerplugin.events.FailedScanEvent
 import org.greenrobot.eventbus.EventBus
 
 /** Utility class to provide helper methods.  */
@@ -37,9 +38,7 @@ object Utils {
     fun postError(sourceClass: String, errorMessage: String, error: Exception) {
         Log.e(sourceClass, errorMessage, error)
         EventBus.getDefault().postSticky(
-            BarcodeErrorEvent(
-                "$errorMessage: ${error.message}"
-            )
+            FailedScanEvent("$errorMessage: ${error.message}", error)
         )
     }
 }

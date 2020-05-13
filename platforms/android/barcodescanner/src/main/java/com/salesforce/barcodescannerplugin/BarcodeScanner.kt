@@ -9,6 +9,9 @@
 
 package com.salesforce.barcodescannerplugin
 
+/**
+ * defines barcode scanner capabilities
+ */
 interface BarcodeScanner {
     fun beginCapture(
         options: BarcodeScannerOptions?,

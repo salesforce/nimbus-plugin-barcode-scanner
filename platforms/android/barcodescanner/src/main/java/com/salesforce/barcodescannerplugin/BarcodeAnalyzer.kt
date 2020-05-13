@@ -24,8 +24,8 @@ class BarcodeAnalyzer(
     private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit,
     private val barcodeScannerOptions: BarcodeScannerOptions? = null
 ) : ImageAnalysis.Analyzer {
-    private var lastAnalyzedTimestamp = 0L
 
+    private var lastAnalyzedTimestamp = 0L
     private val detector: FirebaseVisionBarcodeDetector by lazy {
         if (barcodeScannerOptions == null) {
             FirebaseVision.getInstance().visionBarcodeDetector
@@ -41,8 +41,21 @@ class BarcodeAnalyzer(
                 )
         }
     }
+    var isPaused: Boolean = false
 
-    override fun analyze(image: ImageProxy) {
+    /**
+     * skip analyzing if isPaused
+     * @param image the ImageProxy to analyze
+     */
+    override fun analyze(image: ImageProxy) = if (isPaused) closeImageProxy(image) else doAnalyze(image)
+
+    /**
+     * do barcode detection on the image using firebase vision. one image a time,
+     * next detection will come in only when current finishes, controlled by calling ImageProxy.close()
+     *
+     * @param image the image to analyze on
+     */
+    private fun doAnalyze(image: ImageProxy) {
         val currentTimestamp = System.currentTimeMillis()
         if (currentTimestamp - lastAnalyzedTimestamp >=
             TimeUnit.SECONDS.toMillis(1)
@@ -53,13 +66,27 @@ class BarcodeAnalyzer(
                 .setWidth(image.width)
                 .setRotation(rotationDegreesToFirebaseRotation(image.imageInfo.rotationDegrees))
                 .build()
-            val firebaseImage = FirebaseVisionImage.fromByteBuffer(image.planes[0].buffer, metadata)
+            val firebaseImage =
+                FirebaseVisionImage.fromByteBuffer(image.planes[0].buffer, metadata)
             detector.detectInImage(firebaseImage)
-                .addOnSuccessListener(onBarcodeDetected)
-                .addOnFailureListener { postError(TAG, "Failed to scan barcode", it) }
+                .addOnSuccessListener {
+                    // call callback if not paused
+                    if (!isPaused) onBarcodeDetected(it)
+                    closeImageProxy(image)
+                }
+                .addOnFailureListener {
+                    // call callback if not paused
+                    if (!isPaused) postError(TAG, "Failed to scan barcode", it)
+                    closeImageProxy(image)
+                }
         }
-        image.close()
     }
+
+    /**
+     * close the image proxy, so next image will be pushed down from camera preview for analyzing
+     * @param image the image to close
+     */
+    private fun closeImageProxy(image: ImageProxy) = image.close()
 
     private fun rotationDegreesToFirebaseRotation(rotationDegrees: Int): Int {
         return when (rotationDegrees) {
@@ -72,6 +99,6 @@ class BarcodeAnalyzer(
     }
 
     companion object {
-        val TAG = "BarcodeAnalyzer"
+        const val TAG = "BarcodeAnalyzer"
     }
 }
