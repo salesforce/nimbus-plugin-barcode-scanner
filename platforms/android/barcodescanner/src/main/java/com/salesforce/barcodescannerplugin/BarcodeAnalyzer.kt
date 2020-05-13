@@ -22,11 +22,10 @@ import java.util.concurrent.TimeUnit
 
 class BarcodeAnalyzer(
     private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit,
-    private val barcodeScannerOptions: BarcodeScannerOptions? = null,
-    var isPaused: Boolean = false
+    private val barcodeScannerOptions: BarcodeScannerOptions? = null
 ) : ImageAnalysis.Analyzer {
-    private var lastAnalyzedTimestamp = 0L
 
+    private var lastAnalyzedTimestamp = 0L
     private val detector: FirebaseVisionBarcodeDetector by lazy {
         if (barcodeScannerOptions == null) {
             FirebaseVision.getInstance().visionBarcodeDetector
@@ -42,12 +41,13 @@ class BarcodeAnalyzer(
                 )
         }
     }
+    var isPaused: Boolean = false
 
     /**
      * skip analyzing if isPaused
      * @param image the ImageProxy to analyze
      */
-    override fun analyze(image: ImageProxy) = if (isPaused) image.close() else doAnalyze(image)
+    override fun analyze(image: ImageProxy) = if (isPaused) closeImageProxy(image) else doAnalyze(image)
 
     /**
      * do barcode detection on the image using firebase vision. one image a time,
@@ -77,7 +77,7 @@ class BarcodeAnalyzer(
                 .addOnFailureListener {
                     // call callback if not paused
                     if (!isPaused) postError(TAG, "Failed to scan barcode", it)
-                    image.close()
+                    closeImageProxy(image)
                 }
         }
     }
@@ -99,6 +99,6 @@ class BarcodeAnalyzer(
     }
 
     companion object {
-        val TAG = "BarcodeAnalyzer"
+        const val TAG = "BarcodeAnalyzer"
     }
 }

@@ -33,7 +33,6 @@ import kotlinx.android.synthetic.main.barcode_plugin_activity.barcode_frame
 import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.close_button
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.max
