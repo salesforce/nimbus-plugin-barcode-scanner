@@ -7,5 +7,19 @@
   ~
   -->
 
-<manifest package="com.salesforce.barcodescannerplugin">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.salesforce.barcodescannerplugin">
+
+    <uses-feature android:name="android.hardware.camera" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <application>
+
+        <activity
+            android:name="com.salesforce.barcodescannerplugin.BarcodePluginActivity"
+            android:exported="false"
+            android:screenOrientation="fullSensor"></activity>
+    </application>
 </manifest>

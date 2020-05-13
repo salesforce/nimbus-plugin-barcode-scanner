@@ -9,49 +9,56 @@
 
 <html>
 <head>
+    <style> body {padding:20px;} input {margin-right: 10px; padding: 8px; font-size: 18px;}</style>
 </head>
 <body>
-    <input id='scanSingleBarcode' type='button' onClick='startScanning(false)' value='Scan Single Barcode'/>
-<!--    TODO: Add this back in when activity does not close modal.  Otherwise this will close and start another activity each time-->
-<!--    <input id='scanContinuousBarcode' type='button' onClick='startScanning(true)' value='Scan Continuous Barcodes'/>-->
-    <div id="result"></div>
+<p>
+    <input id='scanSingleBarcode' type='button' onClick='startScanning(false)'
+           value='Scan Single Barcode'/><br>
+</p>
+<p>
+    <input id='scanContinuousBarcode' type='button' onClick='startScanning(true)'
+           value='Scan Continuously'/>
+    <input id='stopContinuousBarcodeScan' type='button' onClick='stopScanning()' value='Stop'/>
+</p>
+<div id="result"></div>
 </body>
 <script>
 
 let barcodeScanner = __nimbus.plugins.barcodeScanner;
 let deviceInfoPlugin = __nimbus.plugins.DeviceInfoPlugin;
-let resultText = document.querySelector("#result");
 let continuousScan = false;
 let barcodesScanned = [];
 
 function setResult(value){
-    document.querySelector("#result").textContent = value;
+    document.querySelector("#result").innerHTML = value;
 }
 
 let barcodeScannerCallback =
     (barcode, error) => {
         console.log(barcode);
         if (barcode !== null) {
-            barcodesScanned.push("type: " + barcode.type + " value: " + decodeURIComponent(barcode.value));
-            setResult(barcodesScanned);
+            barcodesScanned.push("type: " + barcode.type + " value: " + decodeURIComponent(barcode.value) + "<br>");
+            setResult(barcodesScanned.join(""));
             if (continuousScan){
-                barcodeScanner.resumeCapture(barcodeScannerCallback);
+                setTimeout(function() { barcodeScanner.resumeCapture(barcodeScannerCallback);}, 500)
             } else {
-                barcodeScanner.endCapture()
+                stopScanning()
             }
         } if (error !== null) {
-            setResult("error: " + error);
+            setResult("<p>error: " + error + "</p>");
         }
     };
 
 if (typeof deviceInfoPlugin !== undefined && deviceInfoPlugin !== null){
     deviceInfoPlugin.getDeviceInfo().then( (deviceInfo) => {
         console.log(deviceInfo);
-        setResult("Click Scan Barcode to begin. Current version: " + deviceInfo.appVersion);
+        setResult("<p>Click Scan Barcode to begin. Current version: " + deviceInfo.appVersion + "</p>");
     });
 }
 
 function startScanning(continuous) {
+    setResult("")
     barcodesScanned = [];
     continuousScan = continuous;
     if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
@@ -61,5 +68,14 @@ function startScanning(continuous) {
         );
     }
 }
-    </script>
+
+function stopScanning() {
+    if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
+        barcodeScanner.endCapture()
+    }
+}
+
+
+
+</script>
 </html>

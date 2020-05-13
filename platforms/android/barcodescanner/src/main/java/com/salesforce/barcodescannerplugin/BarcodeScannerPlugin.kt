@@ -9,18 +9,23 @@
 
 package com.salesforce.barcodescannerplugin
 
-import android.content.Intent
-import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Context
+import android.webkit.WebView
+import com.salesforce.barcodescannerplugin.events.*
 import com.salesforce.nimbus.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 @PluginOptions("barcodeScanner")
-class BarcodeScannerPlugin(private val activity: AppCompatActivity) : Plugin, BarcodeScanner {
+class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanner {
     private lateinit var scannerCallback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
     private lateinit var barcodeOptions: BarcodeScannerOptions
+    private val eventBus = EventBus.getDefault()
+
+    init {
+        registerEventBus()
+    }
 
     @BoundMethod
     override fun beginCapture(
@@ -29,42 +34,65 @@ class BarcodeScannerPlugin(private val activity: AppCompatActivity) : Plugin, Ba
     ) {
         barcodeOptions = options ?: BarcodeScannerOptions(listOf())
         scannerCallback = callback
-        if (!EventBus.getDefault().isRegistered(this)) {
-            EventBus.getDefault().register(this)
-        }
         startScanner()
     }
 
     @BoundMethod
-    override fun resumeCapture(
-        callback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
-    ) {
+    override fun resumeCapture(callback: (barcode: BarcodeScannerResult?, error: String?) -> Unit) {
         scannerCallback = callback
         startScanner()
     }
 
+    override fun cleanup(webView: WebView, bridge: Bridge) = unRegisterEventBus()
+
+    /**
+     * end capturing:
+     * 1. message out StopScanEvent so to activity listens it and quit
+     * 2. unregister itself from event bus.
+     */
     @BoundMethod
     override fun endCapture() {
-        EventBus.getDefault().unregister(this)
+        eventBus.apply {
+            post(StopScanEvent())
+            unregister(this)
+        }
     }
 
+    @Subscribe
+    fun onMessage(event: ScanStartedEvent) = registerEventBus()
+
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
-    fun onMessageEvent(event: BarcodeScannedEvent) {
+    fun onMessage(event: SuccessfulScanEvent) {
+        eventBus.removeStickyEvent(event)
         scannerCallback(event.barcode, null)
-        EventBus.getDefault().removeStickyEvent(event)
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
-    fun onMessageEvent(event: BarcodeErrorEvent) {
+    fun onMessage(event: FailedScanEvent) {
+        eventBus.removeStickyEvent(event)
         scannerCallback(null, event.errorMessage)
-        EventBus.getDefault().removeStickyEvent(event)
     }
 
+    /**
+     * launch the BarcodePluginActivity to do the scanning
+     */
     private fun startScanner() {
-        val intent = Intent(activity, BarcodePluginActivity::class.java)
-        val bundle = Bundle()
-        bundle.putSerializable(BarcodePluginActivity.OPTIONS_VALUE, barcodeOptions)
-        intent.putExtras(bundle)
-        activity.startActivity(intent)
+        registerEventBus()
+        context.startActivity(
+            BarcodePluginActivity.getIntent(
+                context.applicationContext, barcodeOptions
+            )
+        )
     }
+
+    /**
+     * register the plugin to event bus if haven't done so
+     */
+    private fun registerEventBus() {
+        if (!eventBus.isRegistered(this)) {
+            eventBus.register(this)
+        }
+    }
+
+    private fun unRegisterEventBus() = eventBus.unregister(this)
 }
