@@ -8,4 +8,4 @@
  */
 
 include ':demoapp', ':barcodescanner'
-rootProject.name='Nimubs Barcode Scanner Plugin'
+rootProject.name='Nimbus Barcode Scanner Plugin'
