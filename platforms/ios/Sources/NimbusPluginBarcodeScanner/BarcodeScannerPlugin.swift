@@ -30,12 +30,7 @@ public class BarcodeScannerPlugin {
             return
         }
 
-        let barcodeTypes: [String]
-        if options.barcodeTypes.count > 0 {
-            barcodeTypes = options.barcodeTypes
-        } else {
-            barcodeTypes = BarcodeType.allCases.map { $0.rawValue }
-        }
+        let barcodeTypes = options.barcodeTypes
 
         let captureController = BarcodeScannerViewController(
             targetTypes: barcodeTypes.compactMap {

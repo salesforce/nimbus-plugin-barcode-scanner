@@ -97,7 +97,11 @@ public class BarcodeScannerViewController: UIViewController {
 
     public init(targetTypes: [AVMetadataObject.ObjectType] = []) {
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        self.targetTypes = targetTypes
+        if targetTypes.count > 0 {
+            self.targetTypes = targetTypes
+        } else {
+            self.targetTypes = BarcodeType.allCases.map { $0.metadataObjectType }
+        }
         super.init(nibName: nil, bundle: nil)
     }
 
