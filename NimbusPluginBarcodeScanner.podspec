@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'NimbusPluginBarcodeScanner'
-  s.version          = '0.2.4'
+  s.version          = '1.0.0'
   s.summary          = 'A Nimbus plugin for scanning barcodes.'
 
   s.description      = <<-DESC
