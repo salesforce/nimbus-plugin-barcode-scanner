@@ -22,18 +22,16 @@ object Utils {
 
     private const val REQUIRED_PERMISSION = "android.permission.CAMERA"
 
-    fun arePermissionsGranted(activity: Activity): Boolean {
-        return (checkSelfPermission(
-            activity,
-            REQUIRED_PERMISSION
-        ) == PackageManager.PERMISSION_GRANTED)
-    }
+    fun arePermissionsGranted(activity: Activity) =
+        checkSelfPermission(activity, REQUIRED_PERMISSION) == PackageManager.PERMISSION_GRANTED
 
-    fun requestPermissions(activity: Activity) {
-        ActivityCompat.requestPermissions(
-            activity, arrayOf(REQUIRED_PERMISSION), /* requestCode= */ 0
-        )
-    }
+    fun requestPermissions(activity: Activity) = ActivityCompat.requestPermissions(
+        activity,
+        arrayOf(REQUIRED_PERMISSION), /* requestCode= */ 0
+    )
+
+    fun shouldShowRequestPermissionRationale(activity: Activity) =
+        ActivityCompat.shouldShowRequestPermissionRationale(activity, REQUIRED_PERMISSION)
 
     fun postError(sourceClass: String, errorMessage: String, error: Exception) {
         Log.e(sourceClass, errorMessage, error)

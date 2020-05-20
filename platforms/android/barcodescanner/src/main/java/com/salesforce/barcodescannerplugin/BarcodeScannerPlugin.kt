@@ -11,6 +11,7 @@ package com.salesforce.barcodescannerplugin
 
 import android.content.Context
 import android.webkit.WebView
+import android.widget.Toast
 import com.salesforce.barcodescannerplugin.events.*
 import com.salesforce.nimbus.*
 import org.greenrobot.eventbus.EventBus
@@ -19,7 +20,7 @@ import org.greenrobot.eventbus.ThreadMode
 
 @PluginOptions("barcodeScanner")
 class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanner {
-    private lateinit var scannerCallback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
+    private var scannerCallback: ((barcode: BarcodeScannerResult?, error: String?) -> Unit)? = null
     private lateinit var barcodeOptions: BarcodeScannerOptions
     private val eventBus = EventBus.getDefault()
 
@@ -43,8 +44,6 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
         startScanner()
     }
 
-    override fun cleanup(webView: WebView, bridge: Bridge) = unRegisterEventBus()
-
     /**
      * end capturing:
      * 1. message out StopScanEvent so to activity listens it and quit
@@ -64,14 +63,25 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onMessage(event: SuccessfulScanEvent) {
         eventBus.removeStickyEvent(event)
-        scannerCallback(event.barcode, null)
+        if (scannerCallback != null) {
+            scannerCallback?.invoke(event.barcode, null)
+        } else {
+            showBridgeBrokenMessage()
+        }
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onMessage(event: FailedScanEvent) {
         eventBus.removeStickyEvent(event)
-        scannerCallback(null, event.errorMessage)
+        if (scannerCallback != null) {
+            scannerCallback?.invoke(null, event.errorMessage)
+        } else {
+            showBridgeBrokenMessage()
+        }
     }
+
+    override fun cleanup(webView: WebView, bridge: Bridge) = unRegisterEventBus()
+
 
     /**
      * launch the BarcodePluginActivity to do the scanning
@@ -95,4 +105,12 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
     }
 
     private fun unRegisterEventBus() = eventBus.unregister(this)
+
+    /**
+     *
+     */
+    private fun showBridgeBrokenMessage() {
+        Toast.makeText(context, R.string.bridge_broken_message, Toast.LENGTH_LONG).show()
+        eventBus.post(StopScanEvent())
+    }
 }
