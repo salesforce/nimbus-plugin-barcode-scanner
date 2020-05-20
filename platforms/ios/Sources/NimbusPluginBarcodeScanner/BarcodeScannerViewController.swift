@@ -9,6 +9,10 @@ import AVFoundation
 import CoreGraphics
 import UIKit
 
+public enum BarcodeScannerError: Int, Codable {
+    case userDismissedScanner, userDeniedPermission, userDissabledPermission, unableToUseCamera
+}
+
 public enum BarcodeType: String, Codable, CaseIterable {
     case code128
     case code39
@@ -93,7 +97,7 @@ extension BarcodeType {
 public class BarcodeScannerViewController: UIViewController {
 
     public var onCapture: ((Barcode) -> Void)?
-    public var onError: ((Error) -> Void)?
+    public var onError: ((BarcodeScannerError) -> Void)?
 
     public init(targetTypes: [AVMetadataObject.ObjectType] = []) {
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
@@ -112,61 +116,8 @@ public class BarcodeScannerViewController: UIViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
-        previewLayer.frame = view.layer.bounds
-        previewLayer.videoGravity = .resizeAspectFill
-        view.layer.addSublayer(previewLayer)
-
-        // add toolbar
-        let toolbarView = UIToolbar(frame: CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 44)))
-        toolbar = toolbarView
-        toolbarView.translatesAutoresizingMaskIntoConstraints = false
-        toolbarView.barStyle = .blackTranslucent
-        toolbarView.isTranslucent = true
-        view.addSubview(toolbarView)
-        setupToolbarConstraints(toolbar: toolbarView)
-
-        let overlay = createOverlayView()
-        view.addSubview(overlay)
-        setupOverlayConstraints(overlay: overlay)
-        overlayView = overlay
-
-        // cancel button
-        let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelCaptureSession(sender:)))
-        toolbarView.items = [cancelButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil)]
-
-        guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
-            return
-        }
-        let videoInput: AVCaptureDeviceInput
-
-        do {
-            videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
-        } catch {
-            onError?(error)
-            return
-        }
-
-        if (captureSession.canAddInput(videoInput)) {
-            captureSession.addInput(videoInput)
-        } else {
-            return
-        }
-
-        let metadataOutput = AVCaptureMetadataOutput()
-
-        if (captureSession.canAddOutput(metadataOutput)) {
-            captureSession.addOutput(metadataOutput)
-
-            metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
-            if targetTypes.isEmpty {
-                metadataOutput.metadataObjectTypes = metadataOutput.availableMetadataObjectTypes
-            } else {
-                metadataOutput.metadataObjectTypes = targetTypes
-            }
-        } else {
-            return
-        }
+        setupView()
+        buildCapture()
     }
 
     override public func viewWillAppear(_ animated: Bool) {
@@ -193,6 +144,70 @@ public class BarcodeScannerViewController: UIViewController {
         if captureSession.isRunning {
             captureSession.stopRunning()
         }
+    }
+    
+    fileprivate func setupView() {
+        view.backgroundColor = .white
+        previewLayer.frame = view.layer.bounds
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(previewLayer)
+
+        // add toolbar
+        let toolbarView = UIToolbar(frame: CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 44)))
+        toolbar = toolbarView
+        toolbarView.translatesAutoresizingMaskIntoConstraints = false
+        toolbarView.barStyle = .blackTranslucent
+        toolbarView.isTranslucent = true
+        view.addSubview(toolbarView)
+        setupToolbarConstraints(toolbar: toolbarView)
+
+        let overlay = createOverlayView()
+        view.addSubview(overlay)
+        setupOverlayConstraints(overlay: overlay)
+        overlayView = overlay
+
+        // cancel button
+        let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelCaptureSession(sender:)))
+        toolbarView.items = [cancelButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil)]
+    }
+    
+    fileprivate func sendError(_ error: BarcodeScannerError) {
+        onError?(error)
+    }
+    
+    fileprivate func buildCapture() {
+        guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
+            onError?(.unableToUseCamera)
+            return
+        }
+        
+        let videoInput: AVCaptureDeviceInput
+
+        do {
+            videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
+        } catch {
+            onError?(.unableToUseCamera)
+            return
+        }
+
+        guard captureSession.canAddInput(videoInput) else {
+            onError?(.unableToUseCamera)
+            return
+        }
+        
+        captureSession.addInput(videoInput)
+
+        let metadataOutput = AVCaptureMetadataOutput()
+
+        guard captureSession.canAddOutput(metadataOutput) else {
+            onError?(.unableToUseCamera)
+            return
+        }
+        
+        captureSession.addOutput(metadataOutput)
+
+        metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
+        metadataOutput.metadataObjectTypes = targetTypes.isEmpty ? metadataOutput.availableMetadataObjectTypes : targetTypes
     }
 
     private func createOverlayView() -> UIView {
@@ -235,6 +250,7 @@ public class BarcodeScannerViewController: UIViewController {
     }
 
     @IBAction func cancelCaptureSession(sender: UIBarButtonItem) {
+        onError?(.userDismissedScanner)
         self.dismiss(animated: true, completion: nil)
     }
 
