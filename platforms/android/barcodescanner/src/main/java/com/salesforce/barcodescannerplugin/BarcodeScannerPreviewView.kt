@@ -56,7 +56,7 @@ class BarcodeScannerPreviewView @JvmOverloads constructor(
                     setTargetRotation(rotation)
                 }.build()
 
-                preferredImplementationMode = PreviewView.ImplementationMode.TEXTURE_VIEW
+                preferredImplementationMode = ImplementationMode.TEXTURE_VIEW
                 preview?.setSurfaceProvider(createSurfaceProvider(camera?.cameraInfo))
 
                 // Image Analysis
@@ -66,26 +66,16 @@ class BarcodeScannerPreviewView @JvmOverloads constructor(
                     .setImageQueueDepth(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .setTargetRotation(rotation)
                     .build()
-                    .also {
-                        it.setAnalyzer(
-                            executor, analyzer
-                        )
-                    }
+                    .apply { setAnalyzer(executor, analyzer) }
 
                 // Must unbind the use-cases before rebinding them
                 cameraProvider.unbindAll()
 
-                try {
-                    camera = cameraProvider.bindToLifecycle(
-                        lifecycleOwner, cameraSelector, preview, imageAnalysis
-                    )
-
-                } catch (exc: Exception) {
-                    Utils.postError(TAG, "Failed to start camera", exc)
-                }
+                camera = cameraProvider.bindToLifecycle(
+                    lifecycleOwner, cameraSelector, preview, imageAnalysis
+                )
             }, ContextCompat.getMainExecutor(context))
         }
-
     }
 
     /**
@@ -150,7 +140,6 @@ class BarcodeScannerPreviewView @JvmOverloads constructor(
     }
 
     companion object {
-        private const val TAG = "BarcodeScannerPreviewView"
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
     }

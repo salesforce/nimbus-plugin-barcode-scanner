@@ -10,17 +10,14 @@
 package com.salesforce.barcodescannerplugin
 
 import android.content.Context
-import android.content.DialogInterface.OnClickListener
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
+import com.salesforce.barcodescannerplugin.events.FailedScanEvent
 import com.salesforce.barcodescannerplugin.events.ScanStartedEvent
 import com.salesforce.barcodescannerplugin.events.StopScanEvent
 import com.salesforce.barcodescannerplugin.events.SuccessfulScanEvent
@@ -59,6 +56,9 @@ class BarcodePluginActivity : AppCompatActivity() {
                     onBarcodeFound(barcode)
                 }
             },
+            {
+                scanFailed(BarcodeScannerFailureCode.UNKNOWN_REASON, it)
+            },
             intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
         )
 
@@ -89,6 +89,11 @@ class BarcodePluginActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        scanFailed(BarcodeScannerFailureCode.USER_DISMISSED_SCANNER)
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -99,19 +104,13 @@ class BarcodePluginActivity : AppCompatActivity() {
             // permission granted, start scan
             startScan()
         } else {
-            // denied permission, further explanation?
-            if (Utils.shouldShowRequestPermissionRationale(this)) {
-                // show explanation and hope user will grant it
-                showAlertDialog(R.string.camera_permission_explanation,
-                    OnClickListener { _, _ -> Utils.requestPermissions(this) }
-                )
-            } else {
-                // camera permission disabled,  prompt to go app setting to enable it
-                showAlertDialog(
-                    R.string.enable_camera_permission_explanation,
-                    OnClickListener { _, _ -> openAppSetting() }
-                )
-            }
+            // denied, notify
+            scanFailed(
+                if (Utils.shouldShowRequestPermissionRationale(this))
+                    BarcodeScannerFailureCode.USER_DENIED_PERMISSION
+                else
+                    BarcodeScannerFailureCode.USER_DISABLED_PERMISSION
+            )
         }
     }
 
@@ -141,31 +140,18 @@ class BarcodePluginActivity : AppCompatActivity() {
     }
 
     private fun startScan() {
-        mainHandler.post { viewFinder.startScan(this, barcodeAnalyzer) }
+        mainHandler.post {
+            try {
+                viewFinder.startScan(this, barcodeAnalyzer)
+            } catch (exc: Exception) {
+                scanFailed(BarcodeScannerFailureCode.UNKNOWN_REASON, exc)
+            }
+        }
     }
 
-    /**
-     * open app setting screen for current app, ideally open into the permission section, but seems not possible
-     */
-    private fun openAppSetting() {
-        startActivity(
-            Intent(
-                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.fromParts("package", packageName, null)
-            ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-        )
+    private fun scanFailed(code: BarcodeScannerFailureCode, exception: Exception? = null) {
         finish()
-    }
-
-    /**
-     *
-     */
-    private fun showAlertDialog(content: Int, callback: OnClickListener) {
-        AlertDialog.Builder(this)
-            .setPositiveButton(android.R.string.ok, callback)
-            .setMessage(content)
-            .create()
-            .show()
+        eventBus.postSticky(FailedScanEvent(code, exception))
     }
 
     companion object {
@@ -180,7 +166,9 @@ class BarcodePluginActivity : AppCompatActivity() {
          */
         fun getIntent(context: Context, barcodeOptions: BarcodeScannerOptions) =
             Intent(context, BarcodePluginActivity::class.java).apply {
-                putExtras(Bundle().apply { putSerializable(OPTIONS_VALUE, barcodeOptions) })
+                putExtras(Bundle().apply {
+                    putSerializable(OPTIONS_VALUE, barcodeOptions)
+                })
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
     }

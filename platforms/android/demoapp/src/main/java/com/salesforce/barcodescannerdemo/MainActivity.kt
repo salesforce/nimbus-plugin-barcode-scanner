@@ -35,9 +35,11 @@ class MainActivity : AppCompatActivity() {
         initializeDemoWebViewHtmlContent()
 
         // register the plugins with the webview in the nimbus bridge
-        nimbusBridge.add(DeviceInfoPluginBinder(DeviceInfoPlugin(this)))
         barcodeScannerPlugin = BarcodeScannerPlugin(this)
         nimbusBridge.add(BarcodeScannerPluginBinder(barcodeScannerPlugin))
+
+        nimbusBridge.add(DeviceInfoPluginBinder(DeviceInfoPlugin(this)))
+
         nimbusBridge.attach(plugin_webview)
     }
 

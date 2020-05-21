@@ -9,8 +9,6 @@
 
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Nimbus Barcode Scanner Plugin</string>
-    <string name="cd_close_button">Back</string>
-    <string name="bridge_broken_message" tools:ignore="ExtraTranslation">Barcode scan failed, try again</string>
-    <string name="camera_permission_explanation" tools:ignore="ExtraTranslation">Barcode scanning need camera permission granted to continue!</string>
-    <string name="enable_camera_permission_explanation" tools:ignore="ExtraTranslation">Barcode scanning need camera permission granted to continue! please grant it in Settings permission screen.</string>
+
+    <string name="bridge_broken_message">Barcode scan failed, please try again</string>
 </resources>

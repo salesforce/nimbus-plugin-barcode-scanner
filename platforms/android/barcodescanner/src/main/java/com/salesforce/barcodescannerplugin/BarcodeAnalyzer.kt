@@ -17,15 +17,19 @@ import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
-import com.salesforce.barcodescannerplugin.Utils.postError
+import com.salesforce.barcodescannerplugin.events.FailedScanEvent
+import org.greenrobot.eventbus.EventBus
+import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
 class BarcodeAnalyzer(
     private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit,
+    private val onBarcodeDetectFailed: (Exception) -> Unit,
     private val barcodeScannerOptions: BarcodeScannerOptions? = null
 ) : ImageAnalysis.Analyzer {
 
     private var lastAnalyzedTimestamp = 0L
+    private val eventBus = EventBus.getDefault()
     private val detector: FirebaseVisionBarcodeDetector by lazy {
         if (barcodeScannerOptions == null) {
             FirebaseVision.getInstance().visionBarcodeDetector
@@ -47,7 +51,8 @@ class BarcodeAnalyzer(
      * skip analyzing if isPaused
      * @param image the ImageProxy to analyze
      */
-    override fun analyze(image: ImageProxy) = if (isPaused) closeImageProxy(image) else doAnalyze(image)
+    override fun analyze(image: ImageProxy) =
+        if (isPaused) closeImageProxy(image) else doAnalyze(image)
 
     /**
      * do barcode detection on the image using firebase vision. one image a time,
@@ -76,7 +81,9 @@ class BarcodeAnalyzer(
                 }
                 .addOnFailureListener {
                     // call callback if not paused
-                    if (!isPaused) postError(TAG, "Failed to scan barcode", it)
+                    if (!isPaused) {
+                        onBarcodeDetectFailed(it)
+                    }
                     closeImageProxy(image)
                 }
         }
@@ -96,9 +103,5 @@ class BarcodeAnalyzer(
             270 -> FirebaseVisionImageMetadata.ROTATION_270
             else -> throw IllegalArgumentException("Not supported")
         }
-    }
-
-    companion object {
-        const val TAG = "BarcodeAnalyzer"
     }
 }

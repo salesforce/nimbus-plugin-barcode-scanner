@@ -20,7 +20,9 @@ import org.greenrobot.eventbus.ThreadMode
 
 @PluginOptions("barcodeScanner")
 class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanner {
-    private var scannerCallback: ((barcode: BarcodeScannerResult?, error: String?) -> Unit)? = null
+
+    private var scannerCallback: ((barcode: BarcodeScannerResult?, failure: BarcodeScannerFailure?) -> Unit)? =
+        null
     private lateinit var barcodeOptions: BarcodeScannerOptions
     private val eventBus = EventBus.getDefault()
 
@@ -31,7 +33,7 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
     @BoundMethod
     override fun beginCapture(
         options: BarcodeScannerOptions?,
-        callback: (barcode: BarcodeScannerResult?, error: String?) -> Unit
+        callback: (barcode: BarcodeScannerResult?, failure: BarcodeScannerFailure?) -> Unit
     ) {
         barcodeOptions = options ?: BarcodeScannerOptions(listOf())
         scannerCallback = callback
@@ -39,7 +41,7 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
     }
 
     @BoundMethod
-    override fun resumeCapture(callback: (barcode: BarcodeScannerResult?, error: String?) -> Unit) {
+    override fun resumeCapture(callback: (barcode: BarcodeScannerResult?, failure: BarcodeScannerFailure?) -> Unit) {
         scannerCallback = callback
         startScanner()
     }
@@ -74,7 +76,10 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
     fun onMessage(event: FailedScanEvent) {
         eventBus.removeStickyEvent(event)
         if (scannerCallback != null) {
-            scannerCallback?.invoke(null, event.errorMessage)
+            scannerCallback?.invoke(
+                null,
+                BarcodeScannerFailure(event.errorCode, event.exception?.toString())
+            )
         } else {
             showBridgeBrokenMessage()
         }
@@ -89,9 +94,7 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
     private fun startScanner() {
         registerEventBus()
         context.startActivity(
-            BarcodePluginActivity.getIntent(
-                context.applicationContext, barcodeOptions
-            )
+            BarcodePluginActivity.getIntent(context.applicationContext, barcodeOptions)
         )
     }
 
@@ -106,11 +109,9 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
 
     private fun unRegisterEventBus() = eventBus.unregister(this)
 
-    /**
-     *
-     */
     private fun showBridgeBrokenMessage() {
         Toast.makeText(context, R.string.bridge_broken_message, Toast.LENGTH_LONG).show()
         eventBus.post(StopScanEvent())
     }
+
 }

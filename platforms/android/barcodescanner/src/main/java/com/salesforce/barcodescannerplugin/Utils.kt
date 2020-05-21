@@ -32,11 +32,4 @@ object Utils {
 
     fun shouldShowRequestPermissionRationale(activity: Activity) =
         ActivityCompat.shouldShowRequestPermissionRationale(activity, REQUIRED_PERMISSION)
-
-    fun postError(sourceClass: String, errorMessage: String, error: Exception) {
-        Log.e(sourceClass, errorMessage, error)
-        EventBus.getDefault().postSticky(
-            FailedScanEvent("$errorMessage: ${error.message}", error)
-        )
-    }
 }
