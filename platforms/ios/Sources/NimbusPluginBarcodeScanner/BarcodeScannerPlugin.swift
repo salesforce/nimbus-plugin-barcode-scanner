@@ -100,12 +100,13 @@ extension BarcodeScannerPlugin: Plugin {
 //function used to check if permissions exist before presenting the scanner controller
 fileprivate func checkPermissions(_ callback: @escaping (Barcode?, BarcodeScannerFailure?) -> Void,
                                   _ action: @escaping () -> Void)
-    -> (BarcodeScannerFailure?) -> Void {
-    return { error in
-        if let error = error {
-            callback(.none, error)
-        } else {
+    -> (Result<Void, BarcodeScannerFailure>) -> Void {
+    return { result in
+        switch result {
+        case .success:
             action()
+        case .failure(let error):
+            callback(.none, error)
         }
     }
 }
