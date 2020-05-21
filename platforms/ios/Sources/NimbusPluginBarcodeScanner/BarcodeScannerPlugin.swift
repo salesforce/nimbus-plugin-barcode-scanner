@@ -26,10 +26,10 @@ public class BarcodeScannerPlugin {
     }
     
     func beginCapture(options: ScannerOptions,
-                      callback: @escaping (_ barcode: Barcode?, _ error: BarcodeScannerError?) -> Void) {
+                      callback: @escaping (_ barcode: Barcode?, _ error: BarcodeScannerFailure?) -> Void) {
         let capture = checkPermissions(callback) { [weak self] in
             guard let strongSelf = self else {
-                callback(.none, .unableToUseCamera)
+                callback(.none, .unknownReason("The view was deallocated."))
                 return
             }
             
@@ -63,25 +63,16 @@ public class BarcodeScannerPlugin {
         cameraService.requestAccess(capture)
     }
 
-    func resumeCapture(callback: @escaping (_ barcode: Barcode?, _ error: BarcodeScannerError?) -> Void) {
-        let capture = checkPermissions(callback) { [weak self] in
-            guard let strongSelf = self else {
-                callback(.none, .unableToUseCamera)
-                return
-            }
-            
-            strongSelf.currentScannerController?.onCapture = { barcode in
-                callback(barcode, nil)
-            }
-            
-            strongSelf.currentScannerController?.onError = { error in
-                callback(.none, error)
-            }
-            
-            strongSelf.currentScannerController?.resume()
+    func resumeCapture(callback: @escaping (_ barcode: Barcode?, _ error: BarcodeScannerFailure?) -> Void) {
+        currentScannerController?.onCapture = { barcode in
+            callback(barcode, nil)
         }
         
-        cameraService.requestAccess(capture)
+        currentScannerController?.onError = { error in
+            callback(.none, error)
+        }
+        
+        currentScannerController?.resume()
     }
 
     func endCapture() {
@@ -102,9 +93,9 @@ extension BarcodeScannerPlugin: Plugin {
 }
 
 //function used to check if permissions exist before presenting the scanner controller
-fileprivate func checkPermissions(_ callback: @escaping (Barcode?, BarcodeScannerError?) -> Void,
+fileprivate func checkPermissions(_ callback: @escaping (Barcode?, BarcodeScannerFailure?) -> Void,
                                   _ action: @escaping () -> Void)
-    -> (BarcodeScannerError?) -> Void {
+    -> (BarcodeScannerFailure?) -> Void {
     return { error in
         if let error = error {
             callback(.none, error)

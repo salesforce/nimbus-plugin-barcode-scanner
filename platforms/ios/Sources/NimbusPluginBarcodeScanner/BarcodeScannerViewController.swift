@@ -9,95 +9,10 @@ import AVFoundation
 import CoreGraphics
 import UIKit
 
-public enum BarcodeScannerError: Int, Codable {
-    case userDismissedScanner, userDeniedPermission, userDissabledPermission, unableToUseCamera
-}
-
-public enum BarcodeType: String, Codable, CaseIterable {
-    case code128
-    case code39
-    case code93
-    case dataMatrix
-    case ean13
-    case ean8
-    case itf
-    case upce
-    case pdf417
-    case qr
-}
-
-public struct Barcode: Codable {
-    let type: BarcodeType
-    let value: String
-}
-
-extension Barcode {
-    public init?(machineReadableCode: AVMetadataMachineReadableCodeObject) {
-        guard let stringValue = machineReadableCode.stringValue else {
-            return nil
-        }
-        value = stringValue
-        switch machineReadableCode.type {
-        case .code128:
-            type = .code128
-        case .code39:
-            type = .code39
-        case .code93:
-            type = .code93
-        case .dataMatrix:
-            type = .dataMatrix
-        case .ean13:
-            type = .ean13
-        case .ean8:
-            type = .ean8
-        case .interleaved2of5:
-            type = .itf
-        case .upce:
-            type = .upce
-        case .pdf417:
-            type = .pdf417
-        case .qr:
-            type = .qr
-        default:
-            return nil
-        }
-    }
-}
-
-extension BarcodeType {
-
-    public var metadataObjectType: AVMetadataObject.ObjectType {
-        get {
-            switch self {
-            case .code128:
-                return .code128
-            case .code39:
-                return .code39
-            case .code93:
-                return .code93
-            case .dataMatrix:
-                return .dataMatrix
-            case .ean13:
-                return .ean13
-            case .ean8:
-                return .ean8
-            case .itf:
-                return .interleaved2of5
-            case .upce:
-                return .upce
-            case .pdf417:
-                return .pdf417
-            case .qr:
-                return .qr
-            }
-        }
-    }
-}
-
 public class BarcodeScannerViewController: UIViewController {
 
     public var onCapture: ((Barcode) -> Void)?
-    public var onError: ((BarcodeScannerError) -> Void)?
+    public var onError: ((BarcodeScannerFailure) -> Void)?
 
     public init(targetTypes: [AVMetadataObject.ObjectType] = []) {
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
@@ -171,13 +86,9 @@ public class BarcodeScannerViewController: UIViewController {
         toolbarView.items = [cancelButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil)]
     }
     
-    fileprivate func sendError(_ error: BarcodeScannerError) {
-        onError?(error)
-    }
-    
     fileprivate func buildCapture() {
         guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
-            onError?(.unableToUseCamera)
+            onError?(.unknownReason("Unable to create video capture device."))
             return
         }
         
@@ -186,12 +97,12 @@ public class BarcodeScannerViewController: UIViewController {
         do {
             videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
         } catch {
-            onError?(.unableToUseCamera)
+            onError?(.unknownReason("Failed to create capture input: \(error)"))
             return
         }
 
         guard captureSession.canAddInput(videoInput) else {
-            onError?(.unableToUseCamera)
+            onError?(.unknownReason("Unable to add input to capture session."))
             return
         }
         
@@ -200,7 +111,7 @@ public class BarcodeScannerViewController: UIViewController {
         let metadataOutput = AVCaptureMetadataOutput()
 
         guard captureSession.canAddOutput(metadataOutput) else {
-            onError?(.unableToUseCamera)
+            onError?(.unknownReason("unable to add metadata output to capture session."))
             return
         }
         

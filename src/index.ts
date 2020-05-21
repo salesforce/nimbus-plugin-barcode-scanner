@@ -25,25 +25,34 @@ export enum BarcodeType {
   QR = "qr",
 }
 
-export enum BarcodeScannerError {
+export interface BarcodeScannerFailure {
+  code: BarcodeScannerFailureCode;
+  message: string;
+}
+
+export enum BarcodeScannerFailureCode {
   //the user clicked the button to dismiss the scanner
-  USER_DISMISSED_SCANNER = 0,
+  USER_DISMISSED_SCANNER = "userDismissedScanner",
 
-  //ios: permission was disabled by the user and will need to be turned on in settings
+  //this is only ever returned on android
   //android: permission was denied by user when prompt, could ask again
-  USER_DENIED_PERMISSION = 1,
+  USER_DENIED_PERMISSION = "userDeniedPermission",
 
+  //both ios and android will use this as it requires the same action of the user going to settings
   //android: permission was denied along "don't ask again" when prompt, will need to go app setting to turn on
-  USER_DISABLED_PERMISSION = 2,
+  //ios: permission was disabled by the user and will need to be turned on in settings
+  USER_DISABLED_PERMISSION = "userDisabledPermissions",
 
-  //some sort of error happened when trying to use/open the camera not caused by permissions
-  UNABLE_TO_USE_CAMERA = 3,
+  //A hardware or unknown failure happened when trying to use the camera
+  //or other reason, like FirebaseVision failure.
+  //This is not caused by a lack of permission.
+  UNKNOWN_REASON = "unknownReason",
 
   // android only: the hosting activity could be destroyed while scanning is in
   // foreground, as a result the success or failure can't delivered to webview.
   // It could be delivered to hosting activity when recreated after
   // leaving the scanning activity, but not the webview
-  BRIDGE_UNAVAILABLE = 4
+  BRIDGE_UNAVAILABLE ="bridgeUnavailable"
 }
 
 export interface BarcodeScannerOptions {
@@ -54,11 +63,11 @@ export interface BarcodeScanner {
   // Begin a capture session with the specified options
   beginCapture(
     options: BarcodeScannerOptions,
-    callback: (barcode: Barcode, error: BarcodeScannerError) => void
+    callback: (barcode: Barcode, error: BarcodeScannerFailure) => void
   ): void;
 
   // Resume an existing scanning session using options from beginCapture
-  resumeCapture(callback: (barcode: Barcode, error: BarcodeScannerError) => void): void;
+  resumeCapture(callback: (barcode: Barcode, error: BarcodeScannerFailure) => void): void;
 
   // End a capture session and dismiss the scanner
   endCapture(): void;

@@ -16,7 +16,7 @@ struct CameraService {
         }
     }
     
-    func requestAccess(_ callback: @escaping (BarcodeScannerError?) -> Void) {
+    func requestAccess(_ callback: @escaping (BarcodeScannerFailure?) -> Void) {
         switch self.authorizationStatus {
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { auth in
@@ -34,7 +34,7 @@ struct CameraService {
             callback(.none)
 
         @unknown default:
-            callback(.unableToUseCamera)
+            callback(.unknownReason("An unknown access enum was returned."))
         }
     }
 }
