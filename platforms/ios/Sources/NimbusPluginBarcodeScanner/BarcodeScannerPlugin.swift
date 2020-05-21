@@ -64,15 +64,20 @@ public class BarcodeScannerPlugin {
     }
 
     func resumeCapture(callback: @escaping (_ barcode: Barcode?, _ error: BarcodeScannerFailure?) -> Void) {
-        currentScannerController?.onCapture = { barcode in
+        guard let controller = currentScannerController else {
+            callback(.none, .unknownReason("You must call beginCapture before being able to call resumeCapture."))
+            return
+        }
+        
+        controller.onCapture = { barcode in
             callback(barcode, nil)
         }
         
-        currentScannerController?.onError = { error in
+        controller.onError = { error in
             callback(.none, error)
         }
         
-        currentScannerController?.resume()
+        controller.resume()
     }
 
     func endCapture() {
