@@ -46,13 +46,7 @@ export enum BarcodeScannerFailureCode {
   //A hardware or unknown failure happened when trying to use the camera
   //or other reason, like FirebaseVision failure.
   //This is not caused by a lack of permission.
-  UNKNOWN_REASON = "unknownReason",
-
-  // android only: the hosting activity could be destroyed while scanning is in
-  // foreground, as a result the success or failure can't delivered to webview.
-  // It could be delivered to hosting activity when recreated after
-  // leaving the scanning activity, but not the webview
-  BRIDGE_UNAVAILABLE ="bridgeUnavailable"
+  UNKNOWN_REASON = "unknownReason"
 }
 
 export interface BarcodeScannerOptions {

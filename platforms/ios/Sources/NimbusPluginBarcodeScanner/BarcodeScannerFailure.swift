@@ -13,7 +13,7 @@ public struct BarcodeScannerFailure: Codable, Error {
 }
 
 public enum BarcodeScannerFailureCode: String, Codable {
-    case userDismissedScanner, userDeniedPermission, userDissabledPermission, unknownReason, bridgeUnavailable
+    case userDismissedScanner, userDeniedPermission, userDissabledPermission, unknownReason
 }
 
 extension BarcodeScannerFailure {
