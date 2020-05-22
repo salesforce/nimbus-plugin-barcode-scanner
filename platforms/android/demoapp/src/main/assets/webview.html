@@ -28,7 +28,7 @@
 let barcodeScanner = __nimbus.plugins.barcodeScanner;
 let deviceInfoPlugin = __nimbus.plugins.DeviceInfoPlugin;
 let continuousScan = false;
-let barcodesScanned = [];
+let scanResults = [];
 
 function setResult(value){
     document.querySelector("#result").innerHTML = value;
@@ -38,15 +38,16 @@ let barcodeScannerCallback =
     (barcode, error) => {
         console.log(barcode);
         if (barcode !== null) {
-            barcodesScanned.push("type: " + barcode.type + " value: " + decodeURIComponent(barcode.value) + "<br>");
-            setResult(barcodesScanned.join(""));
+            scanResults.push("type: " + barcode.type + " value: " + decodeURIComponent(barcode.value) + "<br>");
+            setResult(scanResults.join(""));
             if (continuousScan){
                 setTimeout(function() { barcodeScanner.resumeCapture(barcodeScannerCallback);}, 500)
             } else {
                 stopScanning()
             }
         } if (error !== null) {
-            setResult("<p>error: " + error + "</p>");
+            scanResults.push("error: " + error + "<br>")
+            setResult(scanResults.join(""));
         }
     };
 
@@ -59,7 +60,7 @@ if (typeof deviceInfoPlugin !== undefined && deviceInfoPlugin !== null){
 
 function startScanning(continuous) {
     setResult("")
-    barcodesScanned = [];
+    scanResults = [];
     continuousScan = continuous;
     if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
         barcodeScanner.beginCapture(
@@ -74,7 +75,6 @@ function stopScanning() {
         barcodeScanner.endCapture()
     }
 }
-
 
 
 </script>

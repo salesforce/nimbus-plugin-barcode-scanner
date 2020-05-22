@@ -12,66 +12,87 @@ package com.salesforce.barcodescannerplugin
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.DisplayMetrics
+import android.os.Handler
+import android.os.Looper
+import android.os.PersistableBundle
+import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.AspectRatio
-import androidx.camera.core.Camera
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
-import com.google.common.util.concurrent.ListenableFuture
+import com.google.firebase.ml.common.FirebaseMLException
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
-import com.salesforce.barcodescannerplugin.Utils.postError
+import com.salesforce.barcodescannerplugin.events.FailedScanEvent
 import com.salesforce.barcodescannerplugin.events.ScanStartedEvent
 import com.salesforce.barcodescannerplugin.events.StopScanEvent
 import com.salesforce.barcodescannerplugin.events.SuccessfulScanEvent
-import kotlinx.android.synthetic.main.barcode_plugin_activity.barcode_frame
-import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.close_button
+import kotlinx.android.synthetic.main.barcode_plugin_activity.*
+import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
-import java.util.concurrent.Executors
-import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
 
 class BarcodePluginActivity : AppCompatActivity() {
 
-    private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
-    private lateinit var viewFinder: PreviewView
-    private val executor = Executors.newSingleThreadExecutor()
+    private lateinit var viewFinder: BarcodeScannerPreviewView
     private val eventBus = EventBus.getDefault()
-
+    private lateinit var mainHandler: Handler
     private lateinit var barcodeAnalyzer: BarcodeAnalyzer
-    private var preview: Preview? = null
-    private var imageAnalysis: ImageAnalysis? = null
 
-    private var camera: Camera? = null
+    /** if successful scan event is not processed timely, mostly the bridge between the plugin and
+     * the web view is broken due to activity destroy/recreate, run this runnable to finish
+     * the scanning activity */
+    private val eventMessageDeliveryCheckRunnable = Runnable {
+        if (eventBus.getStickyEvent(SuccessfulScanEvent::class.java) != null) {
+            finish()
+        }
+    }
+
+    /**
+     *
+     */
+    private val hideLoadingIndicatorRunnable = Runnable {
+        firebase_ml_loading_indicator.visibility = View.GONE
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.barcode_plugin_activity)
+
+        mainHandler = Handler(Looper.getMainLooper())
         viewFinder = findViewById(R.id.preview_view)
+        lifecycle.addObserver(viewFinder)
 
-        barcodeAnalyzer = BarcodeAnalyzer({ qrCodes ->
-            if (qrCodes.isNotEmpty()) {
-                barcodeAnalyzer.isPaused = true
-                val barcode = qrCodes.first()
-                onBarcodeFound(barcode)
-            }
-        }, getIntentBarcodeScannerOptions())
+        barcodeAnalyzer = BarcodeAnalyzer(
+            this,
+            { qrCodes ->
+                firebase_ml_loading_indicator.visibility = View.GONE
+                if (qrCodes.isNotEmpty()) {
+                    barcodeAnalyzer.isPaused = true
+                    val barcode = qrCodes.first()
+                    onBarcodeFound(barcode)
+                }
+            },
+            {
+                onBarcodeDetectFailed(it)
+            },
+            intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
+        )
 
-        if (!Utils.arePermissionsGranted(this)) {
-            Utils.requestPermissions(this)
-        } else {
-            viewFinder.post { initializeCamera() }
+        close_button.setOnClickListener {
+            onBackPressed()
         }
 
         eventBus.register(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (Utils.arePermissionsGranted(this)) {
+            startScan()
+        } else {
+            Utils.requestPermissions(this)
+        }
+
         eventBus.post(ScanStartedEvent())
     }
 
@@ -81,14 +102,18 @@ class BarcodePluginActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // shutdown camera and executor
-        imageAnalysis?.clearAnalyzer()
-        imageAnalysis = null
-        camera = null
-        executor.shutdown()
-
+        // call preview onDestroy and shutdown executor
+        mainHandler.apply {
+            removeCallbacks(eventMessageDeliveryCheckRunnable)
+            removeCallbacks(hideLoadingIndicatorRunnable)
+        }
         eventBus.unregister(this)
         super.onDestroy()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        scanFailed(BarcodeScannerFailureCode.USER_DISMISSED_SCANNER)
     }
 
     override fun onRequestPermissionsResult(
@@ -98,7 +123,16 @@ class BarcodePluginActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (Utils.arePermissionsGranted(this)) {
-            viewFinder.post { initializeCamera() }
+            // permission granted, start scan
+            startScan()
+        } else {
+            // denied, notify
+            scanFailed(
+                if (Utils.shouldShowRequestPermissionRationale(this))
+                    BarcodeScannerFailureCode.USER_DENIED_PERMISSION
+                else
+                    BarcodeScannerFailureCode.USER_DISABLED_PERMISSION
+            )
         }
     }
 
@@ -107,79 +141,6 @@ class BarcodePluginActivity : AppCompatActivity() {
      */
     @Subscribe
     fun onMessage(event: StopScanEvent) = finish()
-
-    private fun getAspectRation(width: Int, height: Int): Int {
-        val previewRatio = max(width, height).toDouble() / min(width, height)
-        return if (abs(previewRatio - RATIO_4_3_VALUE) <= abs(previewRatio - RATIO_16_9_VALUE))
-            AspectRatio.RATIO_4_3
-        else AspectRatio.RATIO_16_9
-    }
-
-    private fun initializeCamera() {
-        val metrics = DisplayMetrics().also { viewFinder.display.getRealMetrics(it) }
-        val rotation = viewFinder.display.rotation
-
-        val screenAspectRatio = getAspectRation(metrics.widthPixels, metrics.heightPixels)
-
-        barcode_frame.layoutParams.height = metrics.heightPixels / 2
-        barcode_frame.layoutParams.width = metrics.widthPixels / 2
-        barcode_frame.requestLayout()
-
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-
-        // Camera Selector
-        val cameraSelector =
-            CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
-
-        cameraProviderFuture.addListener(Runnable {
-            val cameraProvider = cameraProviderFuture.get()
-
-            // Image Preview
-            preview = Preview.Builder().apply {
-                setTargetAspectRatio(screenAspectRatio)
-                setTargetRotation(rotation)
-            }.build()
-
-            viewFinder.preferredImplementationMode = PreviewView.ImplementationMode.TEXTURE_VIEW
-            preview?.setSurfaceProvider(viewFinder.createSurfaceProvider(camera?.cameraInfo))
-
-            // Image Analysis
-            imageAnalysis = ImageAnalysis.Builder()
-                .setTargetAspectRatio(screenAspectRatio)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .setImageQueueDepth(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .setTargetRotation(rotation)
-                .build()
-                .also {
-                    it.setAnalyzer(
-                        executor, barcodeAnalyzer
-                    )
-                }
-
-            // Must unbind the use-cases before rebinding them
-            cameraProvider.unbindAll()
-
-            try {
-                camera = cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageAnalysis
-                )
-
-            } catch (exc: Exception) {
-                postError(TAG, "Failed to start camera", exc)
-            }
-        }, ContextCompat.getMainExecutor(this))
-
-        close_button.setOnClickListener {
-            onBackPressed()
-        }
-    }
-
-    /**
-     * return the barcode scanner option passed into activity in the intent
-     */
-    private fun getIntentBarcodeScannerOptions() =
-        intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
-
 
     private fun onBarcodeFound(barcode: FirebaseVisionBarcode) {
         // only notify SuccessfulScan when activity is resumed
@@ -192,14 +153,56 @@ class BarcodePluginActivity : AppCompatActivity() {
                     )
                 )
             )
+            // check the successful scan to be consumed timely
+            mainHandler.postDelayed(
+                eventMessageDeliveryCheckRunnable,
+                SUCCESSFUL_SCAN_PROCESS_TIME_THRESHOLD_IN_MS
+            )
         }
     }
 
+    private fun onBarcodeDetectFailed(exception: Exception) {
+        // if google play service doesn't have the ml model for vision, FirebaseMLException is thrown
+        // with message 'Waiting for the barcode detection model to be downloaded. Please wait'
+        // so detect such case and show and loading indicator
+        if (exception is FirebaseMLException &&
+            exception.message != null &&
+            exception.message!!.contains("Please wait")
+        ) {
+            firebase_ml_loading_indicator.visibility = View.VISIBLE
+            mainHandler.apply {
+                removeCallbacks(hideLoadingIndicatorRunnable)
+                postDelayed(
+                    hideLoadingIndicatorRunnable,
+                    FIREBASE_ML_LOADING_TIME_THRESHOLD_IN_MS
+                )
+            }
+        } else {
+            firebase_ml_loading_indicator.visibility = View.GONE
+            scanFailed(BarcodeScannerFailureCode.UNKNOWN_REASON, exception)
+        }
+    }
+
+    private fun startScan() {
+        mainHandler.post {
+            try {
+                viewFinder.startScan(this, barcodeAnalyzer)
+            } catch (exc: Exception) {
+                scanFailed(BarcodeScannerFailureCode.UNKNOWN_REASON, exc)
+            }
+        }
+    }
+
+    private fun scanFailed(code: BarcodeScannerFailureCode, exception: Exception? = null) {
+        finish()
+        eventBus.postSticky(FailedScanEvent(code, exception))
+    }
+
     companion object {
-        private const val TAG = "BarcodePluginActivity"
-        const val OPTIONS_VALUE = "OptionsValue"
-        private const val RATIO_4_3_VALUE = 4.0 / 3.0
-        private const val RATIO_16_9_VALUE = 16.0 / 9.0
+        private const val OPTIONS_VALUE = "OptionsValue"
+        private const val SUCCESSFUL_SCAN_PROCESS_TIME_THRESHOLD_IN_MS = 1000L
+        private const val FIREBASE_ML_LOADING_TIME_THRESHOLD_IN_MS = 1000L
+        private const val STATE_KEY_SCAN_STARTED = "ScanStarted"
 
         /**
          * create the intent for launch BarcodePluginActivity, set intent flag to SINGLE_TOP to only allow one BarcodePluginActivity
@@ -209,7 +212,9 @@ class BarcodePluginActivity : AppCompatActivity() {
          */
         fun getIntent(context: Context, barcodeOptions: BarcodeScannerOptions) =
             Intent(context, BarcodePluginActivity::class.java).apply {
-                putExtras(Bundle().apply { putSerializable(OPTIONS_VALUE, barcodeOptions) })
+                putExtras(Bundle().apply {
+                    putSerializable(OPTIONS_VALUE, barcodeOptions)
+                })
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
     }

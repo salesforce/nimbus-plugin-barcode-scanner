@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="start|center_vertical"
         android:layout_marginStart="@dimen/top_action_button_padding"
-        android:contentDescription="@string/cd_close_button"
+        android:contentDescription="@android:string/cancel"
         android:minWidth="?actionBarSize"
         app:srcCompat="@drawable/ic_close_vd_white_24" />
 

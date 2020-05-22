@@ -9,21 +9,42 @@
 
 package com.salesforce.barcodescannerplugin
 
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
-import com.salesforce.barcodescannerplugin.Utils.postError
+import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
+/**
+ * The barcode analyzer which takes a image proxy, call firebase ml vision to get the barcode.
+ *
+ * @param activity the analyzer run in a activity. Analyzing will stop automatically when
+ *      activity become invisible, instead of some time crashing on some devices.
+ * @param onBarcodeDetected callback to call when analyzer found a barcode
+ * @param onBarcodeDetectFailed callback to call when analyzer failed
+ * @param barcodeScannerOptions
+ */
 class BarcodeAnalyzer(
+    private val activity: AppCompatActivity,
     private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit,
+    private val onBarcodeDetectFailed: (Exception) -> Unit,
     private val barcodeScannerOptions: BarcodeScannerOptions? = null
-) : ImageAnalysis.Analyzer {
+) : ImageAnalysis.Analyzer, LifecycleEventObserver {
+
+    init {
+        activity.lifecycle.addObserver(this)
+    }
+
+    var isPaused: Boolean = false
 
     private var lastAnalyzedTimestamp = 0L
     private val detector: FirebaseVisionBarcodeDetector by lazy {
@@ -41,13 +62,19 @@ class BarcodeAnalyzer(
                 )
         }
     }
-    var isPaused: Boolean = false
 
     /**
      * skip analyzing if isPaused
      * @param image the ImageProxy to analyze
      */
-    override fun analyze(image: ImageProxy) = if (isPaused) closeImageProxy(image) else doAnalyze(image)
+    override fun analyze(image: ImageProxy) =
+        if (isPaused) closeImageProxy(image) else doAnalyze(image)
+
+    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+        if (event == Lifecycle.Event.ON_RESUME) {
+            isPaused = false
+        }
+    }
 
     /**
      * do barcode detection on the image using firebase vision. one image a time,
@@ -69,14 +96,16 @@ class BarcodeAnalyzer(
             val firebaseImage =
                 FirebaseVisionImage.fromByteBuffer(image.planes[0].buffer, metadata)
             detector.detectInImage(firebaseImage)
-                .addOnSuccessListener {
+                .addOnSuccessListener(activity) {
                     // call callback if not paused
                     if (!isPaused) onBarcodeDetected(it)
                     closeImageProxy(image)
                 }
-                .addOnFailureListener {
+                .addOnFailureListener(activity) {
                     // call callback if not paused
-                    if (!isPaused) postError(TAG, "Failed to scan barcode", it)
+                    if (!isPaused) {
+                        onBarcodeDetectFailed(it)
+                    }
                     closeImageProxy(image)
                 }
         }
@@ -96,9 +125,5 @@ class BarcodeAnalyzer(
             270 -> FirebaseVisionImageMetadata.ROTATION_270
             else -> throw IllegalArgumentException("Not supported")
         }
-    }
-
-    companion object {
-        const val TAG = "BarcodeAnalyzer"
     }
 }
