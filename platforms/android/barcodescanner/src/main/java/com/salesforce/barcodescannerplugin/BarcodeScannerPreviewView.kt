@@ -10,6 +10,9 @@ import androidx.camera.core.CameraSelector.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.Lifecycle.Event.*
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
 import java.util.concurrent.Executors
@@ -22,7 +25,7 @@ class BarcodeScannerPreviewView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
     defStyleRes: Int = 0
-) : PreviewView(context, attrs, defStyleAttr, defStyleRes) {
+) : PreviewView(context, attrs, defStyleAttr, defStyleRes), LifecycleEventObserver {
 
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
@@ -79,16 +82,6 @@ class BarcodeScannerPreviewView @JvmOverloads constructor(
     }
 
     /**
-     * do some cleanup when the embedding activity is destroyed
-     */
-    fun onDestroy() {
-        imageAnalysis?.clearAnalyzer()
-        imageAnalysis = null
-        camera = null
-        executor.shutdown()
-    }
-
-    /**
      * in some cases, when the light is not optimal, auto whole view metering and focus might not good
      * for do the scanning successful, so enable the capability that let the user to touch a point on the camera preview to
      * take that spot as metering spot ( auto focus, auto exposure, and auto white balance), it's very helpful
@@ -142,5 +135,15 @@ class BarcodeScannerPreviewView @JvmOverloads constructor(
     companion object {
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
+    }
+
+    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+        if (event == ON_DESTROY) {
+            // do some cleanup when destroyed
+            imageAnalysis?.clearAnalyzer()
+            imageAnalysis = null
+            camera = null
+            executor.shutdown()
+        }
     }
 }

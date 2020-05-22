@@ -14,6 +14,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PersistableBundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -58,8 +59,10 @@ class BarcodePluginActivity : AppCompatActivity() {
 
         mainHandler = Handler(Looper.getMainLooper())
         viewFinder = findViewById(R.id.preview_view)
+        lifecycle.addObserver(viewFinder)
 
         barcodeAnalyzer = BarcodeAnalyzer(
+            this,
             { qrCodes ->
                 firebase_ml_loading_indicator.visibility = View.GONE
                 if (qrCodes.isNotEmpty()) {
@@ -78,13 +81,18 @@ class BarcodePluginActivity : AppCompatActivity() {
             onBackPressed()
         }
 
+        eventBus.register(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
         if (Utils.arePermissionsGranted(this)) {
             startScan()
         } else {
             Utils.requestPermissions(this)
         }
 
-        eventBus.register(this)
         eventBus.post(ScanStartedEvent())
     }
 
@@ -95,7 +103,6 @@ class BarcodePluginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         // call preview onDestroy and shutdown executor
-        viewFinder.onDestroy()
         mainHandler.apply {
             removeCallbacks(eventMessageDeliveryCheckRunnable)
             removeCallbacks(hideLoadingIndicatorRunnable)
@@ -195,6 +202,7 @@ class BarcodePluginActivity : AppCompatActivity() {
         private const val OPTIONS_VALUE = "OptionsValue"
         private const val SUCCESSFUL_SCAN_PROCESS_TIME_THRESHOLD_IN_MS = 1000L
         private const val FIREBASE_ML_LOADING_TIME_THRESHOLD_IN_MS = 1000L
+        private const val STATE_KEY_SCAN_STARTED = "ScanStarted"
 
         /**
          * create the intent for launch BarcodePluginActivity, set intent flag to SINGLE_TOP to only allow one BarcodePluginActivity
