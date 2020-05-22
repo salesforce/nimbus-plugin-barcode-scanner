@@ -13,7 +13,7 @@ public enum BarcodeType: String, Codable, CaseIterable {
     case code128
     case code39
     case code93
-    case dataMatrix
+    case dataMatrix = "datamatrix"
     case ean13
     case ean8
     case itf
