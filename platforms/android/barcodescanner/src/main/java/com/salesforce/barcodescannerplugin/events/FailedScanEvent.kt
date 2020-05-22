@@ -9,11 +9,12 @@
 
 package com.salesforce.barcodescannerplugin.events
 
+import com.salesforce.barcodescannerplugin.BarcodeScannerFailureCode
 import java.lang.Exception
 
 /**
  * event posted to event bus when failed to scan a barcode.
  *
- * @param errorMessage error message for the failed scan
+ * @param errorCode error code for the failed scan
  */
-class FailedScanEvent(val errorMessage: String, val exception: Exception)
+class FailedScanEvent(val errorCode: BarcodeScannerFailureCode, val exception: Exception?=null)

@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var barcodeScannerPlugin: BarcodeScannerPlugin
     private val nimbusBridge = Bridge()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,14 +35,12 @@ class MainActivity : AppCompatActivity() {
         initializeDemoWebViewHtmlContent()
 
         // register the plugins with the webview in the nimbus bridge
-        nimbusBridge.add(DeviceInfoPluginBinder(DeviceInfoPlugin(this)))
-        val barcodeScannerPlugin = BarcodeScannerPlugin(this)
+        barcodeScannerPlugin = BarcodeScannerPlugin(this)
         nimbusBridge.add(BarcodeScannerPluginBinder(barcodeScannerPlugin))
-        nimbusBridge.attach(plugin_webview)
 
-        /**
-         * TODO: discuss with team to add barcodeScannerPlugin.onWebViewAttached() to help solve demo activity destroy/recreate issue.
-         */
+        nimbusBridge.add(DeviceInfoPluginBinder(DeviceInfoPlugin(this)))
+
+        nimbusBridge.attach(plugin_webview)
     }
 
     override fun onDestroy() {
