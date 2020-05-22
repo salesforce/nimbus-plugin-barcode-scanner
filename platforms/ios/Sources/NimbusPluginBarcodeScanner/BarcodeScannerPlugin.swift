@@ -18,48 +18,66 @@ public class BarcodeScannerPlugin {
     var presenter: Presenter
 
     public typealias Presenter = (UIViewController) -> Void
+    
+    fileprivate let cameraService = CameraService()
 
     public init(presenter: @escaping Presenter) {
         self.presenter = presenter
     }
     
     func beginCapture(options: ScannerOptions,
-                      callback: @escaping (_ barcode: Barcode?, _ error: String?) -> Void) {
-        if let existingCaptureController = currentScannerController {
-            existingCaptureController.resume()
-            return
-        }
+                      callback: @escaping (_ barcode: Barcode?, _ error: BarcodeScannerFailure?) -> Void) {
+        let capture = checkPermissions(callback) { [weak self] in
+            guard let strongSelf = self else {
+                callback(.none, .unknownReason("The view was deallocated."))
+                return
+            }
+            
+            if let existingCaptureController = strongSelf.currentScannerController {
+                existingCaptureController.resume()
+                return
+            }
 
-        let barcodeTypes = options.barcodeTypes
+            let barcodeTypes = options.barcodeTypes
 
-        let captureController = BarcodeScannerViewController(
-            targetTypes: barcodeTypes.compactMap {
-                BarcodeType(rawValue: $0)?.metadataObjectType
-            })
+            let captureController = BarcodeScannerViewController(
+                targetTypes: barcodeTypes.compactMap {
+                    BarcodeType(rawValue: $0)?.metadataObjectType
+                })
 
-        if #available(iOS 13, *) {
-            captureController.modalPresentationStyle = .fullScreen
-        }
+            if #available(iOS 13, *) {
+                captureController.modalPresentationStyle = .fullScreen
+            }
 
-        captureController.onCapture = { barcode in
-            callback(barcode, nil)
-        }
-        captureController.onError = { error in
-            callback(nil, "failed")
+            captureController.onCapture = { barcode in
+                callback(barcode, nil)
+            }
+            captureController.onError = { error in
+                callback(.none, error)
+            }
+            
+            strongSelf.currentScannerController = captureController
+            strongSelf.presenter(captureController)
         }
         
-        currentScannerController = captureController
-        presenter(captureController)
+        cameraService.requestAccess(capture)
     }
 
-    func resumeCapture(callback: @escaping (_ barcode: Barcode?, _ error: String?) -> Void) {
-        currentScannerController?.onCapture = { barcode in
+    func resumeCapture(callback: @escaping (_ barcode: Barcode?, _ error: BarcodeScannerFailure?) -> Void) {
+        guard let controller = currentScannerController else {
+            callback(.none, .unknownReason("You must call beginCapture before being able to call resumeCapture."))
+            return
+        }
+        
+        controller.onCapture = { barcode in
             callback(barcode, nil)
         }
-        currentScannerController?.onError = { error in
-            callback(nil, "failed")
+        
+        controller.onError = { error in
+            callback(.none, error)
         }
-        currentScannerController?.resume()
+        
+        controller.resume()
     }
 
     func endCapture() {
@@ -79,3 +97,16 @@ extension BarcodeScannerPlugin: Plugin {
 
 }
 
+//function used to check if permissions exist before presenting the scanner controller
+fileprivate func checkPermissions(_ callback: @escaping (Barcode?, BarcodeScannerFailure?) -> Void,
+                                  _ action: @escaping () -> Void)
+    -> (Result<Void, BarcodeScannerFailure>) -> Void {
+    return { result in
+        switch result {
+        case .success:
+            action()
+        case .failure(let error):
+            callback(.none, error)
+        }
+    }
+}

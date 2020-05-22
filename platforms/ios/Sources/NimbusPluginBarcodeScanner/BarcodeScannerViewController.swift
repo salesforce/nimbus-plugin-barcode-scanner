@@ -9,91 +9,10 @@ import AVFoundation
 import CoreGraphics
 import UIKit
 
-public enum BarcodeType: String, Codable, CaseIterable {
-    case code128
-    case code39
-    case code93
-    case dataMatrix = "datamatrix"
-    case ean13
-    case ean8
-    case itf
-    case upce
-    case pdf417
-    case qr
-}
-
-public struct Barcode: Codable {
-    let type: BarcodeType
-    let value: String
-}
-
-extension Barcode {
-    public init?(machineReadableCode: AVMetadataMachineReadableCodeObject) {
-        guard let stringValue = machineReadableCode.stringValue else {
-            return nil
-        }
-        value = stringValue
-        switch machineReadableCode.type {
-        case .code128:
-            type = .code128
-        case .code39:
-            type = .code39
-        case .code93:
-            type = .code93
-        case .dataMatrix:
-            type = .dataMatrix
-        case .ean13:
-            type = .ean13
-        case .ean8:
-            type = .ean8
-        case .interleaved2of5:
-            type = .itf
-        case .upce:
-            type = .upce
-        case .pdf417:
-            type = .pdf417
-        case .qr:
-            type = .qr
-        default:
-            return nil
-        }
-    }
-}
-
-extension BarcodeType {
-
-    public var metadataObjectType: AVMetadataObject.ObjectType {
-        get {
-            switch self {
-            case .code128:
-                return .code128
-            case .code39:
-                return .code39
-            case .code93:
-                return .code93
-            case .dataMatrix:
-                return .dataMatrix
-            case .ean13:
-                return .ean13
-            case .ean8:
-                return .ean8
-            case .itf:
-                return .interleaved2of5
-            case .upce:
-                return .upce
-            case .pdf417:
-                return .pdf417
-            case .qr:
-                return .qr
-            }
-        }
-    }
-}
-
 public class BarcodeScannerViewController: UIViewController {
 
     public var onCapture: ((Barcode) -> Void)?
-    public var onError: ((Error) -> Void)?
+    public var onError: ((BarcodeScannerFailure) -> Void)?
 
     public init(targetTypes: [AVMetadataObject.ObjectType] = []) {
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
@@ -112,61 +31,8 @@ public class BarcodeScannerViewController: UIViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
-        previewLayer.frame = view.layer.bounds
-        previewLayer.videoGravity = .resizeAspectFill
-        view.layer.addSublayer(previewLayer)
-
-        // add toolbar
-        let toolbarView = UIToolbar(frame: CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 44)))
-        toolbar = toolbarView
-        toolbarView.translatesAutoresizingMaskIntoConstraints = false
-        toolbarView.barStyle = .blackTranslucent
-        toolbarView.isTranslucent = true
-        view.addSubview(toolbarView)
-        setupToolbarConstraints(toolbar: toolbarView)
-
-        let overlay = createOverlayView()
-        view.addSubview(overlay)
-        setupOverlayConstraints(overlay: overlay)
-        overlayView = overlay
-
-        // cancel button
-        let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelCaptureSession(sender:)))
-        toolbarView.items = [cancelButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil)]
-
-        guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
-            return
-        }
-        let videoInput: AVCaptureDeviceInput
-
-        do {
-            videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
-        } catch {
-            onError?(error)
-            return
-        }
-
-        if (captureSession.canAddInput(videoInput)) {
-            captureSession.addInput(videoInput)
-        } else {
-            return
-        }
-
-        let metadataOutput = AVCaptureMetadataOutput()
-
-        if (captureSession.canAddOutput(metadataOutput)) {
-            captureSession.addOutput(metadataOutput)
-
-            metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
-            if targetTypes.isEmpty {
-                metadataOutput.metadataObjectTypes = metadataOutput.availableMetadataObjectTypes
-            } else {
-                metadataOutput.metadataObjectTypes = targetTypes
-            }
-        } else {
-            return
-        }
+        setupView()
+        buildCapture()
     }
 
     override public func viewWillAppear(_ animated: Bool) {
@@ -193,6 +59,66 @@ public class BarcodeScannerViewController: UIViewController {
         if captureSession.isRunning {
             captureSession.stopRunning()
         }
+    }
+    
+    fileprivate func setupView() {
+        view.backgroundColor = .white
+        previewLayer.frame = view.layer.bounds
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(previewLayer)
+
+        // add toolbar
+        let toolbarView = UIToolbar(frame: CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 44)))
+        toolbar = toolbarView
+        toolbarView.translatesAutoresizingMaskIntoConstraints = false
+        toolbarView.barStyle = .blackTranslucent
+        toolbarView.isTranslucent = true
+        view.addSubview(toolbarView)
+        setupToolbarConstraints(toolbar: toolbarView)
+
+        let overlay = createOverlayView()
+        view.addSubview(overlay)
+        setupOverlayConstraints(overlay: overlay)
+        overlayView = overlay
+
+        // cancel button
+        let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelCaptureSession(sender:)))
+        toolbarView.items = [cancelButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil)]
+    }
+    
+    fileprivate func buildCapture() {
+        guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
+            onError?(.unknownReason("Unable to create video capture device."))
+            return
+        }
+        
+        let videoInput: AVCaptureDeviceInput
+
+        do {
+            videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
+        } catch {
+            onError?(.unknownReason("Failed to create capture input: \(error)"))
+            return
+        }
+
+        guard captureSession.canAddInput(videoInput) else {
+            onError?(.unknownReason("Unable to add input to capture session."))
+            return
+        }
+        
+        captureSession.addInput(videoInput)
+
+        let metadataOutput = AVCaptureMetadataOutput()
+
+        guard captureSession.canAddOutput(metadataOutput) else {
+            onError?(.unknownReason("unable to add metadata output to capture session."))
+            return
+        }
+        
+        captureSession.addOutput(metadataOutput)
+
+        metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
+        metadataOutput.metadataObjectTypes = targetTypes.isEmpty ? metadataOutput.availableMetadataObjectTypes : targetTypes
     }
 
     private func createOverlayView() -> UIView {
@@ -235,6 +161,7 @@ public class BarcodeScannerViewController: UIViewController {
     }
 
     @IBAction func cancelCaptureSession(sender: UIBarButtonItem) {
+        onError?(.userDismissedScanner)
         self.dismiss(animated: true, completion: nil)
     }
 
