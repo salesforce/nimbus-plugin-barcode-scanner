@@ -35,6 +35,20 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintWidth_percent="0.5" />
 
+        <!-- when google play service cache cleaned, the ml loading will take a bit of time, so show
+        this indicator while doing the loading -->
+        <ProgressBar
+            android:id="@+id/firebase_ml_loading_indicator"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
+
         <include
             layout="@layout/top_action_bar_in_live_camera"
             android:layout_width="match_parent"

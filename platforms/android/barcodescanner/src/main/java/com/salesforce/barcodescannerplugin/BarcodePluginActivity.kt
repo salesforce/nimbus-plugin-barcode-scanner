@@ -14,13 +14,17 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
+import com.google.firebase.ml.common.FirebaseMLException
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import com.salesforce.barcodescannerplugin.events.FailedScanEvent
 import com.salesforce.barcodescannerplugin.events.ScanStartedEvent
 import com.salesforce.barcodescannerplugin.events.StopScanEvent
 import com.salesforce.barcodescannerplugin.events.SuccessfulScanEvent
+import kotlinx.android.synthetic.main.barcode_plugin_activity.*
 import kotlinx.android.synthetic.main.top_action_bar_in_live_camera.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -35,10 +39,17 @@ class BarcodePluginActivity : AppCompatActivity() {
     /** if successful scan event is not processed timely, mostly the bridge between the plugin and
      * the web view is broken due to activity destroy/recreate, run this runnable to finish
      * the scanning activity */
-    private var eventMessageDeliveryCheckRunnable = Runnable {
+    private val eventMessageDeliveryCheckRunnable = Runnable {
         if (eventBus.getStickyEvent(SuccessfulScanEvent::class.java) != null) {
             finish()
         }
+    }
+
+    /**
+     *
+     */
+    private val hideLoadingIndicatorRunnable = Runnable {
+        firebase_ml_loading_indicator.visibility = View.GONE
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +61,7 @@ class BarcodePluginActivity : AppCompatActivity() {
 
         barcodeAnalyzer = BarcodeAnalyzer(
             { qrCodes ->
+                firebase_ml_loading_indicator.visibility = View.GONE
                 if (qrCodes.isNotEmpty()) {
                     barcodeAnalyzer.isPaused = true
                     val barcode = qrCodes.first()
@@ -57,7 +69,7 @@ class BarcodePluginActivity : AppCompatActivity() {
                 }
             },
             {
-                scanFailed(BarcodeScannerFailureCode.UNKNOWN_REASON, it)
+                onBarcodeDetectFailed(it)
             },
             intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
         )
@@ -84,7 +96,10 @@ class BarcodePluginActivity : AppCompatActivity() {
     override fun onDestroy() {
         // call preview onDestroy and shutdown executor
         viewFinder.onDestroy()
-        mainHandler.removeCallbacks(eventMessageDeliveryCheckRunnable)
+        mainHandler.apply {
+            removeCallbacks(eventMessageDeliveryCheckRunnable)
+            removeCallbacks(hideLoadingIndicatorRunnable)
+        }
         eventBus.unregister(this)
         super.onDestroy()
     }
@@ -139,6 +154,28 @@ class BarcodePluginActivity : AppCompatActivity() {
         }
     }
 
+    private fun onBarcodeDetectFailed(exception: Exception) {
+        // if google play service doesn't have the ml model for vision, FirebaseMLException is thrown
+        // with message 'Waiting for the barcode detection model to be downloaded. Please wait'
+        // so detect such case and show and loading indicator
+        if (exception is FirebaseMLException &&
+            exception.message != null &&
+            exception.message!!.contains("Please wait")
+        ) {
+            firebase_ml_loading_indicator.visibility = View.VISIBLE
+            mainHandler.apply {
+                removeCallbacks(hideLoadingIndicatorRunnable)
+                postDelayed(
+                    hideLoadingIndicatorRunnable,
+                    FIREBASE_ML_LOADING_TIME_THRESHOLD_IN_MS
+                )
+            }
+        } else {
+            firebase_ml_loading_indicator.visibility = View.GONE
+            scanFailed(BarcodeScannerFailureCode.UNKNOWN_REASON, exception)
+        }
+    }
+
     private fun startScan() {
         mainHandler.post {
             try {
@@ -157,6 +194,7 @@ class BarcodePluginActivity : AppCompatActivity() {
     companion object {
         private const val OPTIONS_VALUE = "OptionsValue"
         private const val SUCCESSFUL_SCAN_PROCESS_TIME_THRESHOLD_IN_MS = 1000L
+        private const val FIREBASE_ML_LOADING_TIME_THRESHOLD_IN_MS = 1000L
 
         /**
          * create the intent for launch BarcodePluginActivity, set intent flag to SINGLE_TOP to only allow one BarcodePluginActivity

@@ -29,7 +29,6 @@ class BarcodeAnalyzer(
 ) : ImageAnalysis.Analyzer {
 
     private var lastAnalyzedTimestamp = 0L
-    private val eventBus = EventBus.getDefault()
     private val detector: FirebaseVisionBarcodeDetector by lazy {
         if (barcodeScannerOptions == null) {
             FirebaseVision.getInstance().visionBarcodeDetector

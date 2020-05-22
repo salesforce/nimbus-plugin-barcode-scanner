@@ -22,7 +22,7 @@
             android:value="barcode" />
 
         <!-- lock scanning activity in portrait mode, disable auto rotation to prevent
-        activity recreation whe rotating which will cause the camera flick -->
+        activity recreation when rotating which will cause the camera flick -->
         <activity
             android:name="com.salesforce.barcodescannerplugin.BarcodePluginActivity"
             android:exported="false"
