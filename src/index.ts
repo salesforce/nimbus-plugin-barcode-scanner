@@ -67,7 +67,9 @@ export interface BarcodeScanner {
   ): void;
 
   // Resume an existing scanning session using options from beginCapture
-  resumeCapture(callback: (barcode: Barcode, error: BarcodeScannerFailure) => void): void;
+  resumeCapture(
+      callback: (barcode: Barcode, error: BarcodeScannerFailure) => void
+  ): void;
 
   // End a capture session and dismiss the scanner
   endCapture(): void;
