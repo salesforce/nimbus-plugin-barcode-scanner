@@ -7,7 +7,11 @@
 
 import UIKit
 import WebKit
+#if canImport(NimbusBridge)
 import NimbusBridge
+#elseif canImport(Nimbus)
+import Nimbus
+#endif
 
 public struct ScannerOptions: Decodable {
     let barcodeTypes: [String]
