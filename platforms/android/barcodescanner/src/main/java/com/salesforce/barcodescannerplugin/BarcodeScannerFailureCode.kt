@@ -1,9 +1,11 @@
 package com.salesforce.barcodescannerplugin
 
+import com.salesforce.nimbus.JSONSerializable
+
 /**
  * the error code the barcode scan could possible through
  */
-enum class BarcodeScannerFailureCode(val idStr: String) {
+enum class BarcodeScannerFailureCode(val idStr: String) : JSONSerializable {
 
     /**
      * the user clicked the button to dismiss the scanner
@@ -34,5 +36,7 @@ enum class BarcodeScannerFailureCode(val idStr: String) {
      * It could be delivered to hosting activity when recreated after
      * leaving the scanning activity, but not the webview
      */
-    BRIDGE_UNAVAILABLE("bridgeUnavailable"),
+    BRIDGE_UNAVAILABLE("bridgeUnavailable");
+
+    override fun stringify() = idStr
 }
