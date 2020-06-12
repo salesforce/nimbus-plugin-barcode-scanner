@@ -5,7 +5,7 @@ import com.salesforce.nimbus.JSONSerializable
 /**
  * the error code the barcode scan could possible through
  */
-enum class BarcodeScannerFailureCode(val idStr: String) : JSONSerializable {
+enum class BarcodeScannerFailureCode(val value: String) : JSONSerializable {
 
     /**
      * the user clicked the button to dismiss the scanner
@@ -38,5 +38,5 @@ enum class BarcodeScannerFailureCode(val idStr: String) : JSONSerializable {
      */
     BRIDGE_UNAVAILABLE("bridgeUnavailable");
 
-    override fun stringify() = idStr
+    override fun stringify() = value
 }
