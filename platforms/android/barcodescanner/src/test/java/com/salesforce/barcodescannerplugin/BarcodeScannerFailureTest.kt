@@ -11,17 +11,22 @@ package com.salesforce.barcodescannerplugin
 import com.salesforce.barcodescannerplugin.BarcodeScannerFailureCode.*
 import org.junit.Assert
 import org.junit.Test
+import java.util.*
 
 class BarcodeScannerFailureTest {
     @Test
     fun `verify converting to json string`() {
         val error = BarcodeScannerFailure(USER_DISMISSED_SCANNER).stringify()
-        Assert.assertEquals("{\"code\":\"userDismissedScanner\"}", error)
+        Assert.assertEquals("{\"code\":\"${USER_DISMISSED_SCANNER.value}\"}", error)
     }
 
     @Test
     fun `verify converting to json string with message`() {
-        val error = BarcodeScannerFailure(UNKNOWN_REASON, "message body").stringify()
-        Assert.assertEquals("{\"code\":\"unknownReason\",\"message\":\"message body\"}", error)
+        val messageBody = UUID.randomUUID().toString()
+        val error = BarcodeScannerFailure(UNKNOWN_REASON, messageBody).stringify()
+        Assert.assertEquals(
+            "{\"code\":\"${UNKNOWN_REASON.value}\",\"message\":\"$messageBody\"}",
+            error
+        )
     }
 }
