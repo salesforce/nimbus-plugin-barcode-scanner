@@ -31,14 +31,15 @@ let continuousScan = false;
 let scanResults = [];
 
 function setResult(value){
-    document.querySelector("#result").innerHTML = value;
+    document.querySelector("#result").innerText = value;
 }
 
 let barcodeScannerCallback =
     (barcode, error) => {
         console.log(barcode);
         if (barcode !== null) {
-            scanResults.push("type: " + barcode.type + " value: " + decodeURIComponent(barcode.value) + "<br>");
+            console.log(barcode.value);
+            scanResults.push(JSON.stringify(barcode) + "\n");
             setResult(scanResults.join(""));
             if (continuousScan){
                 setTimeout(function() { barcodeScanner.resumeCapture(barcodeScannerCallback);}, 500)
@@ -46,7 +47,7 @@ let barcodeScannerCallback =
                 stopScanning()
             }
         } if (error !== null) {
-            scanResults.push("error: " + error + "<br>")
+            scanResults.push("error: " + JSON.stringify(error) + "\n")
             setResult(scanResults.join(""));
         }
     };
@@ -54,7 +55,7 @@ let barcodeScannerCallback =
 if (typeof deviceInfoPlugin !== undefined && deviceInfoPlugin !== null){
     deviceInfoPlugin.getDeviceInfo().then( (deviceInfo) => {
         console.log(deviceInfo);
-        setResult("<p>Click Scan Barcode to begin. Current version: " + deviceInfo.appVersion + "</p>");
+        setResult("Click Scan Barcode to begin. Current version: " + deviceInfo.appVersion );
     });
 }
 
@@ -75,7 +76,5 @@ function stopScanning() {
         barcodeScanner.endCapture()
     }
 }
-
-
 </script>
 </html>

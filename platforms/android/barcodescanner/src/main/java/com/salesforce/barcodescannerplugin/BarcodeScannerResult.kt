@@ -14,10 +14,8 @@ import org.json.JSONObject
 import java.net.URLEncoder
 
 data class BarcodeScannerResult(val type: BarcodeType, val value: String) : JSONSerializable {
-    override fun stringify(): String {
-        return JSONObject().apply {
-            put("type", type)
-            put("value", URLEncoder.encode(value, "utf-8"))
-        }.toString()
-    }
+    override fun stringify() = JSONObject().apply {
+        put("type", type)
+        put("value", value)
+    }.toString()
 }
