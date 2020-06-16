@@ -31,14 +31,14 @@ let continuousScan = false;
 let barcodesScanned = [];
 
 function setResult(value){
-    document.querySelector("#result").innerHTML = value;
+    document.querySelector("#result").innerText = value;
 }
 
 let barcodeScannerCallback =
     (barcode, error) => {
         console.log(barcode);
         if (barcode !== null) {
-            barcodesScanned.push("type: " + barcode.type + " value: " + decodeURIComponent(barcode.value) + "<br>");
+            barcodesScanned.push("type: " + barcode.type + " value: " + barcode.value + "\n");
             setResult(barcodesScanned.join(""));
             if (continuousScan){
                 setTimeout(function() { barcodeScanner.resumeCapture(barcodeScannerCallback);}, 500)
@@ -46,14 +46,14 @@ let barcodeScannerCallback =
                 stopScanning()
             }
         } if (error !== null) {
-            setResult("<p>error: " + error + "</p>");
+            setResult("error: " + error);
         }
     };
 
 if (typeof deviceInfoPlugin !== undefined && deviceInfoPlugin !== null){
     deviceInfoPlugin.getDeviceInfo().then( (deviceInfo) => {
         console.log(deviceInfo);
-        setResult("<p>Click Scan Barcode to begin. Current version: " + deviceInfo.appVersion + "</p>");
+        setResult("Click Scan Barcode to begin. Current version: " + deviceInfo.appVersion + "");
     });
 }
 

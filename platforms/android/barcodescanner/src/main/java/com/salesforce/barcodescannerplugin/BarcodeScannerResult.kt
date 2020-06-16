@@ -17,7 +17,7 @@ data class BarcodeScannerResult(val type: BarcodeType, val value: String) : JSON
     override fun stringify(): String {
         return JSONObject().apply {
             put("type", type)
-            put("value", URLEncoder.encode(value, "utf-8"))
+            put("value", value)
         }.toString()
     }
 }
