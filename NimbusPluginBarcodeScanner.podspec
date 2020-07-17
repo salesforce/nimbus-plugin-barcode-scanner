@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'NimbusPluginBarcodeScanner'
-  s.version          = '1.0.1'
+  s.version          = '1.0.2'
   s.summary          = 'A Nimbus plugin for scanning barcodes.'
 
   s.description      = <<-DESC
@@ -16,5 +16,5 @@ Pod::Spec.new do |s|
   s.swift_version    = '5.0'
 
   s.ios.deployment_target = '11.0'
-  s.dependency 'NimbusBridge', '~> 1.0.0'
+  s.dependency 'NimbusBridge', '~> 1.0'
 end
