@@ -7,7 +7,7 @@
 
 import UIKit
 import WebKit
-import NimbusBridge
+import Nimbus
 
 public struct ScannerOptions: Decodable {
     let barcodeTypes: [String]
@@ -88,11 +88,15 @@ public class BarcodeScannerPlugin {
 }
 
 extension BarcodeScannerPlugin: Plugin {
-    public func bind(to webView: WKWebView, bridge: Bridge) {
-        let connection = webView.addConnection(to: self, as: "barcodeScanner")
-        connection.bind(BarcodeScannerPlugin.beginCapture, as: "beginCapture")
-        connection.bind(BarcodeScannerPlugin.resumeCapture, as: "resumeCapture")
-        connection.bind(BarcodeScannerPlugin.endCapture, as: "endCapture")
+
+    public var namespace: String {
+        return "barcodeScanner"
+    }
+
+    public func bind<C>(to connection: C) where C : Connection {
+        connection.bind(self.beginCapture, as: "beginCapture")
+        connection.bind(self.resumeCapture, as: "resumeCapture")
+        connection.bind(self.endCapture, as: "endCapture")
     }
 
 }
