@@ -11,7 +11,7 @@ let package = Package(
             targets: ["NimbusPluginBarcodeScanner"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/salesforce/nimbus", .branch("master"))
+        .package(url: "https://github.com/salesforce/nimbus", .branch("main"))
     ],
     targets: [
         .target(

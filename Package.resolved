@@ -5,8 +5,8 @@
         "package": "Nimbus",
         "repositoryURL": "https://github.com/salesforce/nimbus",
         "state": {
-          "branch": "master",
-          "revision": "21d3cc7ef4bac43e07cf00002fe5f2bd706397dd",
+          "branch": "main",
+          "revision": "86b42d56e5091bf30b647d23e395f72d06da671c",
           "version": null
         }
       }
