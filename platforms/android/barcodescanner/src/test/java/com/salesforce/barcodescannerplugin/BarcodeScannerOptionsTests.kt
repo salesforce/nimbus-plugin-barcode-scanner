@@ -44,4 +44,15 @@ class BarcodeScannerOptionsTests {
         val barcodeScannerOptions = BarcodeScannerOptions()
         assert(barcodeScannerOptions.barcodeTypes.count() == 0)
     }
+
+    @Test
+    fun `convert json to barcodeScannerOptions with all barcode types when the input array is empty`() {
+        val originalOptions = """
+            {'barcodeTypes': 
+                []
+            }
+        """.trimIndent()
+        val barcodeScannerOptions = BarcodeScannerOptions.fromJSON(originalOptions)
+        assert(barcodeScannerOptions.barcodeTypes.count() == enumValues<BarcodeType>().count())
+    }
 }
