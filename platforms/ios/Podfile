@@ -1,0 +1,10 @@
+source 'https://git.soma.salesforce.com/MobilePlatform/CocoaPods-Specs.git'
+
+
+platform :ios, '13.0'
+
+project 'BarcodeScanner/BarcodeScanner.xcodeproj'
+
+target 'BarcodeScanner' do
+  pod 'NimbusBridge', '~> 2.0.0-beta1'
+end
