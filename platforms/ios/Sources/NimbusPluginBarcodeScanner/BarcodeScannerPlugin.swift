@@ -43,7 +43,7 @@ public class BarcodeScannerPlugin {
             let captureController = BarcodeScannerViewController(
                 targetTypes: barcodeTypes.compactMap {
                     BarcodeType(rawValue: $0)?.metadataObjectType
-                })
+            }, instructionText: nil)
 
             if #available(iOS 13, *) {
                 captureController.modalPresentationStyle = .fullScreen

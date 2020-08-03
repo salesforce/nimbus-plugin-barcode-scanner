@@ -14,14 +14,17 @@ public class BarcodeScannerViewController: UIViewController {
 
     public var onCapture: ((Barcode) -> Void)?
     public var onError: ((BarcodeScannerFailure) -> Void)?
+    public let instructionText: String?
 
-    public init(targetTypes: [AVMetadataObject.ObjectType] = []) {
+    public init(targetTypes: [AVMetadataObject.ObjectType] = [], instructionText: String? = nil) {
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         if targetTypes.count > 0 {
             self.targetTypes = targetTypes
         } else {
             self.targetTypes = BarcodeType.allCases.map { $0.metadataObjectType }
         }
+        self.instructionText = instructionText
+        self.statusBar = ScannerStatusBar(instructionText: instructionText)
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -52,6 +55,7 @@ public class BarcodeScannerViewController: UIViewController {
         if let overlay = overlayView {
             overlay.layer.mask = createReticleLayer(overlay: overlay, verticalOffset: toolbar?.frame.height ?? 0.0)
         }
+        view.bringSubviewToFront(statusBar)
     }
 
     override public func viewWillDisappear(_ animated: Bool) {
@@ -67,6 +71,7 @@ public class BarcodeScannerViewController: UIViewController {
         previewLayer.frame = view.layer.bounds
         previewLayer.videoGravity = .resizeAspectFill
         view.layer.addSublayer(previewLayer)
+        view.addSubview(statusBar)
 
         // add toolbar
         let toolbarView = UIToolbar(frame: CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 44)))
@@ -141,11 +146,15 @@ public class BarcodeScannerViewController: UIViewController {
 
     private func setupOverlayConstraints(overlay: UIView) {
         guard let toolbarView = toolbar else { return }
-        let views = ["overlay": overlay, "toolbar": toolbarView]
+        let views = ["overlay": overlay, "toolbar": toolbarView, "status": statusBar]
         let horizontal = NSLayoutConstraint.constraints(withVisualFormat: "H:|[overlay]|", metrics: nil, views: views)
         let vertical = NSLayoutConstraint.constraints(withVisualFormat: "V:[toolbar][overlay]|", metrics: nil, views: views)
+        let top = (overlay.frame.height / 2) + 168.0
+        let statusVertical = NSLayoutConstraint(item: statusBar, attribute: .top, relatedBy: .equal, toItem: overlay, attribute: .centerY, multiplier: 1.0, constant: top)
+        let statusHorizontal = NSLayoutConstraint(item: statusBar, attribute: .centerX, relatedBy: .equal, toItem: overlay, attribute: .centerX, multiplier: 1.0, constant: 0.0)
         view.addConstraints(horizontal)
         view.addConstraints(vertical)
+        view.addConstraints([statusVertical, statusHorizontal])
     }
 
     private func createReticleLayer(overlay: UIView, verticalOffset: CGFloat) -> CAShapeLayer {
@@ -177,6 +186,7 @@ public class BarcodeScannerViewController: UIViewController {
 
     private var toolbar: UIToolbar?
     private var overlayView: UIView?
+    private let statusBar: ScannerStatusBar
     private let captureSession = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer
     private let targetTypes: [AVMetadataObject.ObjectType]
@@ -193,4 +203,40 @@ extension BarcodeScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
             onCapture?(barcode)
         }
     }
+}
+
+private class ScannerStatusBar: UIView {
+    init(instructionText: String?) {
+        label = UILabel(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.backgroundColor = UIColor.clear
+        label.textColor = UIColor.white
+        label.font = UIFont.systemFont(ofSize: 16)
+        label.isEnabled = true
+        label.textAlignment = .center
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
+        label.text = instructionText
+        label.isUserInteractionEnabled = true
+
+        super.init(frame: CGRect(x: 0, y: 0, width: 304, height: 50))
+        self.addSubview(label)
+        self.translatesAutoresizingMaskIntoConstraints = false
+        backgroundColor = UIColor(red: 0.03, green: 0.03, blue: 0.03, alpha: 1.00)
+        let width = NSLayoutConstraint(item: self, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 304.0)
+        let height = NSLayoutConstraint(item: self, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 50.0)
+        let labelX = NSLayoutConstraint(item: label, attribute: .centerX, relatedBy: .equal, toItem: self, attribute: .centerX, multiplier: 1.0, constant: 0.0)
+        let labelY = NSLayoutConstraint(item: label, attribute: .centerY, relatedBy: .equal, toItem: self, attribute: .centerY, multiplier: 1.0, constant: 0.0)
+        self.addConstraints([width, height, labelX, labelY])
+        self.layer.cornerRadius = 4
+        if instructionText == nil {
+            self.isHidden = true
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private let label: UILabel
 }
