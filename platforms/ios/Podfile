@@ -12,3 +12,11 @@ target 'BarcodeScanner' do
   pod 'NimbusBridge', '~> 2.0.0-beta1'
   pod 'DesignSystem', '~> 3.1'
 end
+
+target 'BarcodeScannerTests' do
+  use_frameworks!
+
+  pod 'NimbusBridge', '~> 2.0.0-beta1'
+  pod 'DesignSystem', '~> 3.1'
+  pod 'SnapshotTesting', '~> 1.8.1'
+end

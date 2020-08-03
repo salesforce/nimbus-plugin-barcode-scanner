@@ -16,6 +16,7 @@
 		CCE2636C24D31B7D00C50D82 /* BarcodeScanner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCE2636224D31B7D00C50D82 /* BarcodeScanner.framework */; };
 		CCE2637124D31B7D00C50D82 /* BarcodeScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE2637024D31B7D00C50D82 /* BarcodeScannerTests.swift */; };
 		CCE2637324D31B7D00C50D82 /* BarcodeScanner.h in Headers */ = {isa = PBXBuildFile; fileRef = CCE2636524D31B7D00C50D82 /* BarcodeScanner.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D5B70979BC26EC86A001BD38 /* Pods_BarcodeScannerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA719C312B6F8080FBD9BEE5 /* Pods_BarcodeScannerTests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,8 +30,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1203DA2E7B45BC41FE17BEAC /* Pods-BarcodeScannerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BarcodeScannerTests.debug.xcconfig"; path = "Target Support Files/Pods-BarcodeScannerTests/Pods-BarcodeScannerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		14920250530D40E955ADE336 /* Pods-BarcodeScanner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BarcodeScanner.debug.xcconfig"; path = "Target Support Files/Pods-BarcodeScanner/Pods-BarcodeScanner.debug.xcconfig"; sourceTree = "<group>"; };
 		1FA92F606AD5D97ADC7BE34B /* Pods-BarcodeScanner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BarcodeScanner.release.xcconfig"; path = "Target Support Files/Pods-BarcodeScanner/Pods-BarcodeScanner.release.xcconfig"; sourceTree = "<group>"; };
+		A1E01D2261EA481EAD85581E /* Pods-BarcodeScannerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BarcodeScannerTests.release.xcconfig"; path = "Target Support Files/Pods-BarcodeScannerTests/Pods-BarcodeScannerTests.release.xcconfig"; sourceTree = "<group>"; };
+		AA719C312B6F8080FBD9BEE5 /* Pods_BarcodeScannerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BarcodeScannerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCE1FFC424D36BAA00609E90 /* CameraService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CameraService.swift; path = ../../Sources/NimbusPluginBarcodeScanner/CameraService.swift; sourceTree = "<group>"; };
 		CCE1FFC524D36BAA00609E90 /* Barcode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Barcode.swift; path = ../../Sources/NimbusPluginBarcodeScanner/Barcode.swift; sourceTree = "<group>"; };
 		CCE1FFC624D36BAA00609E90 /* BarcodeScannerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BarcodeScannerViewController.swift; path = ../../Sources/NimbusPluginBarcodeScanner/BarcodeScannerViewController.swift; sourceTree = "<group>"; };
@@ -59,6 +63,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CCE2636C24D31B7D00C50D82 /* BarcodeScanner.framework in Frameworks */,
+				D5B70979BC26EC86A001BD38 /* Pods_BarcodeScannerTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,6 +75,8 @@
 			children = (
 				14920250530D40E955ADE336 /* Pods-BarcodeScanner.debug.xcconfig */,
 				1FA92F606AD5D97ADC7BE34B /* Pods-BarcodeScanner.release.xcconfig */,
+				1203DA2E7B45BC41FE17BEAC /* Pods-BarcodeScannerTests.debug.xcconfig */,
+				A1E01D2261EA481EAD85581E /* Pods-BarcodeScannerTests.release.xcconfig */,
 			);
 			name = Pods;
 			path = ../Pods;
@@ -79,6 +86,7 @@
 			isa = PBXGroup;
 			children = (
 				E18D4811A56A21E5CE4F5FA3 /* Pods_BarcodeScanner.framework */,
+				AA719C312B6F8080FBD9BEE5 /* Pods_BarcodeScannerTests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -163,9 +171,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CCE2637924D31B7D00C50D82 /* Build configuration list for PBXNativeTarget "BarcodeScannerTests" */;
 			buildPhases = (
+				2572D3778FEC0D72F6FD4A96 /* [CP] Check Pods Manifest.lock */,
 				CCE2636724D31B7D00C50D82 /* Sources */,
 				CCE2636824D31B7D00C50D82 /* Frameworks */,
 				CCE2636924D31B7D00C50D82 /* Resources */,
+				DDB53A7A0A123AD182B95542 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -253,6 +263,45 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		2572D3778FEC0D72F6FD4A96 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-BarcodeScannerTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		DDB53A7A0A123AD182B95542 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BarcodeScannerTests/Pods-BarcodeScannerTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BarcodeScannerTests/Pods-BarcodeScannerTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BarcodeScannerTests/Pods-BarcodeScannerTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -462,6 +511,7 @@
 		};
 		CCE2637A24D31B7D00C50D82 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1203DA2E7B45BC41FE17BEAC /* Pods-BarcodeScannerTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -480,6 +530,7 @@
 		};
 		CCE2637B24D31B7D00C50D82 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A1E01D2261EA481EAD85581E /* Pods-BarcodeScannerTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
