@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4127F1182D8C779DEAAC4706 /* Pods_BarcodeScanner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E18D4811A56A21E5CE4F5FA3 /* Pods_BarcodeScanner.framework */; };
 		CCE1FFC924D36BAA00609E90 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE1FFC424D36BAA00609E90 /* CameraService.swift */; };
 		CCE1FFCA24D36BAA00609E90 /* Barcode.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE1FFC524D36BAA00609E90 /* Barcode.swift */; };
 		CCE1FFCB24D36BAA00609E90 /* BarcodeScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE1FFC624D36BAA00609E90 /* BarcodeScannerViewController.swift */; };
@@ -15,7 +16,6 @@
 		CCE2636C24D31B7D00C50D82 /* BarcodeScanner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCE2636224D31B7D00C50D82 /* BarcodeScanner.framework */; };
 		CCE2637124D31B7D00C50D82 /* BarcodeScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE2637024D31B7D00C50D82 /* BarcodeScannerTests.swift */; };
 		CCE2637324D31B7D00C50D82 /* BarcodeScanner.h in Headers */ = {isa = PBXBuildFile; fileRef = CCE2636524D31B7D00C50D82 /* BarcodeScanner.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		EEA7735A4DF8B3B6426BC42E /* libPods-BarcodeScanner.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C34FC18DC5184FFC1607FFA /* libPods-BarcodeScanner.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,7 +30,6 @@
 
 /* Begin PBXFileReference section */
 		14920250530D40E955ADE336 /* Pods-BarcodeScanner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BarcodeScanner.debug.xcconfig"; path = "Target Support Files/Pods-BarcodeScanner/Pods-BarcodeScanner.debug.xcconfig"; sourceTree = "<group>"; };
-		1C34FC18DC5184FFC1607FFA /* libPods-BarcodeScanner.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BarcodeScanner.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FA92F606AD5D97ADC7BE34B /* Pods-BarcodeScanner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BarcodeScanner.release.xcconfig"; path = "Target Support Files/Pods-BarcodeScanner/Pods-BarcodeScanner.release.xcconfig"; sourceTree = "<group>"; };
 		CCE1FFC424D36BAA00609E90 /* CameraService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CameraService.swift; path = ../../Sources/NimbusPluginBarcodeScanner/CameraService.swift; sourceTree = "<group>"; };
 		CCE1FFC524D36BAA00609E90 /* Barcode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Barcode.swift; path = ../../Sources/NimbusPluginBarcodeScanner/Barcode.swift; sourceTree = "<group>"; };
@@ -43,6 +42,7 @@
 		CCE2636B24D31B7D00C50D82 /* BarcodeScannerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BarcodeScannerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCE2637024D31B7D00C50D82 /* BarcodeScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScannerTests.swift; sourceTree = "<group>"; };
 		CCE2637224D31B7D00C50D82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E18D4811A56A21E5CE4F5FA3 /* Pods_BarcodeScanner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BarcodeScanner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,7 +50,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EEA7735A4DF8B3B6426BC42E /* libPods-BarcodeScanner.a in Frameworks */,
+				4127F1182D8C779DEAAC4706 /* Pods_BarcodeScanner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,7 +78,7 @@
 		6A659116483C69B6589377C4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1C34FC18DC5184FFC1607FFA /* libPods-BarcodeScanner.a */,
+				E18D4811A56A21E5CE4F5FA3 /* Pods_BarcodeScanner.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
