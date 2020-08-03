@@ -14,7 +14,7 @@ class BarcodeScannerTests: XCTestCase {
 
     func testBlankState() {
         let vc = BarcodeScannerViewController()
-        assertSnapshot(matching: vc, as: .image)
+        assertSnapshot(matching: vc, as: .image, record: true)
     }
 
 }

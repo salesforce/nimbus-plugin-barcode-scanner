@@ -8,6 +8,7 @@
 import AVFoundation
 import CoreGraphics
 import UIKit
+import DesignSystem
 
 public class BarcodeScannerViewController: UIViewController {
 
@@ -49,7 +50,7 @@ public class BarcodeScannerViewController: UIViewController {
     override public func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         if let overlay = overlayView {
-            overlay.layer.mask = createReticleLayer(overlay: overlay)
+            overlay.layer.mask = createReticleLayer(overlay: overlay, verticalOffset: toolbar?.frame.height ?? 0.0)
         }
     }
 
@@ -124,7 +125,7 @@ public class BarcodeScannerViewController: UIViewController {
     private func createOverlayView() -> UIView {
         let overlay = UIView()
         overlay.translatesAutoresizingMaskIntoConstraints = false
-        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        overlay.backgroundColor = UIColor(red: 0.03, green: 0.03, blue: 0.03, alpha: 0.5)
         overlay.clipsToBounds = true
         return overlay
     }
@@ -147,16 +148,19 @@ public class BarcodeScannerViewController: UIViewController {
         view.addConstraints(vertical)
     }
 
-    private func createReticleLayer(overlay: UIView) -> CAShapeLayer {
+    private func createReticleLayer(overlay: UIView, verticalOffset: CGFloat) -> CAShapeLayer {
         let shape = CAShapeLayer()
         let path = CGMutablePath()
-        let width = overlay.frame.width - 60.0
-        let height: CGFloat = 250.0
-        path.addRoundedRect(in: CGRect(x: overlay.frame.midX - (width / 2), y: 150.0, width: width, height: height), cornerWidth: 8, cornerHeight: 8)
+        let width: CGFloat = 304.0
+        let height: CGFloat = 304.0
+        let x: CGFloat = overlay.frame.midX - (width / 2)
+        let y: CGFloat = (overlay.frame.midY - (height / 2)) - verticalOffset
+        path.addRoundedRect(in: CGRect(x: x, y: y, width: width, height: height), cornerWidth: 4, cornerHeight: 4)
         path.addRect(CGRect(origin: .zero, size: overlay.frame.size))
         shape.path = path
         shape.backgroundColor = UIColor.black.cgColor
         shape.fillRule = .evenOdd
+
         return shape
     }
 
