@@ -32,8 +32,10 @@ class ViewController: UIViewController {
             if let code = barcode {
                 self.barcodes.append(code)
             }
-            self.plugin?.endCapture()
             self.tableView.reloadData()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                self.plugin?.endCapture()
+            }
         })
     }
 
