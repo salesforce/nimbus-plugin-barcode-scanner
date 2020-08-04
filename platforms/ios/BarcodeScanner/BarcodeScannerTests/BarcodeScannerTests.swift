@@ -22,4 +22,9 @@ class BarcodeScannerTests: XCTestCase {
         assertSnapshot(matching: vc, as: .image)
     }
 
+    func testVeryLongText() {
+        let vc = BarcodeScannerViewController(instructionText: "This is a very long line of text that is testing what the scanner looks like when the text doesn't fit")
+        assertSnapshot(matching: vc, as: .image)
+    }
+
 }

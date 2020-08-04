@@ -25,7 +25,13 @@ public class BarcodeScannerViewController: UIViewController {
         }
         self.instructionText = instructionText
         self.statusBar = ScannerStatusBar(instructionText: instructionText)
+        let xImage = UIImage.sldsActionIcon(.remove, with: .white, andBGColor: .clear, andSize: 45.0)
+        closeButton = UIButton(type: .custom)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        closeButton.setBackgroundImage(xImage, for: .normal)
+        closeButton.sizeToFit()
         super.init(nibName: nil, bundle: nil)
+        closeButton.addTarget(self, action: #selector(cancelCaptureSession(sender:)), for: .touchUpInside)
     }
 
     @available(*, unavailable)
@@ -75,6 +81,7 @@ public class BarcodeScannerViewController: UIViewController {
 
         let overlay = createOverlayView()
         view.addSubview(overlay)
+        view.addSubview(closeButton)
         setupOverlayConstraints(overlay: overlay)
         overlayView = overlay
     }
@@ -132,6 +139,10 @@ public class BarcodeScannerViewController: UIViewController {
         view.addConstraints(horizontal)
         view.addConstraints(vertical)
         view.addConstraints([statusVertical, statusHorizontal])
+
+        let closeX = NSLayoutConstraint(item: closeButton, attribute: .right, relatedBy: .equal, toItem: overlay, attribute: .right, multiplier: 1.0, constant: -12.0)
+        let closeY = NSLayoutConstraint(item: closeButton, attribute: .top, relatedBy: .equal, toItem: overlay, attribute: .top, multiplier: 1.0, constant: 44.0)
+        view.addConstraints([closeX, closeY])
     }
 
     private func createReticleLayer(overlay: UIView, verticalOffset: CGFloat) -> CAShapeLayer {
@@ -163,6 +174,7 @@ public class BarcodeScannerViewController: UIViewController {
 
     private var overlayView: UIView?
     private let statusBar: ScannerStatusBar
+    private let closeButton: UIButton
     private let captureSession = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer
     private let targetTypes: [AVMetadataObject.ObjectType]
@@ -203,7 +215,9 @@ private class ScannerStatusBar: UIView {
         let height = NSLayoutConstraint(item: self, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 50.0)
         let labelX = NSLayoutConstraint(item: label, attribute: .centerX, relatedBy: .equal, toItem: self, attribute: .centerX, multiplier: 1.0, constant: 0.0)
         let labelY = NSLayoutConstraint(item: label, attribute: .centerY, relatedBy: .equal, toItem: self, attribute: .centerY, multiplier: 1.0, constant: 0.0)
-        self.addConstraints([width, height, labelX, labelY])
+        let labelWidth = NSLayoutConstraint(item: label, attribute: .width, relatedBy: .equal, toItem: self, attribute: .width, multiplier: 1.0, constant: 0.0)
+        let labelHeight = NSLayoutConstraint(item: label, attribute: .height, relatedBy: .equal, toItem: self, attribute: .height, multiplier: 1.0, constant: 0.0)
+        self.addConstraints([width, height, labelX, labelY, labelWidth, labelHeight])
         self.layer.cornerRadius = 4
         if instructionText == nil {
             self.isHidden = true
