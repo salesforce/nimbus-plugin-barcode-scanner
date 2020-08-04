@@ -9,8 +9,8 @@ import Foundation
 import AVFoundation
 
 public struct Barcode: Codable {
-    let type: BarcodeType
-    let value: String
+    public let type: BarcodeType
+    public let value: String
 }
 
 extension Barcode {

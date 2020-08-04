@@ -6,16 +6,17 @@ platform :ios, '13.0'
 
 project 'BarcodeScanner/BarcodeScanner.xcodeproj'
 
-target 'BarcodeScanner' do
-  use_frameworks!
+use_frameworks!
+
+abstract_target 'My Pods' do
+  target 'BarcodeScanner'
+  target 'Scanner'
 
   pod 'NimbusBridge', '~> 2.0.0-beta1'
   pod 'DesignSystem', '~> 3.1'
 end
 
 target 'BarcodeScannerTests' do
-  use_frameworks!
-
   pod 'NimbusBridge', '~> 2.0.0-beta1'
   pod 'DesignSystem', '~> 3.1'
   pod 'SnapshotTesting', '~> 1.8.1'
