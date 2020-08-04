@@ -27,4 +27,10 @@ class BarcodeScannerTests: XCTestCase {
         assertSnapshot(matching: vc, as: .image)
     }
 
+    func testSuccessState() {
+        let vc = BarcodeScannerViewController(instructionText: "Position barcode in the scanner view", successText: "Success!")
+        vc.configureForSuccess()
+        assertSnapshot(matching: vc, as: .image)
+    }
+
 }

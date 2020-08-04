@@ -15,8 +15,9 @@ public class BarcodeScannerViewController: UIViewController {
     public var onCapture: ((Barcode) -> Void)?
     public var onError: ((BarcodeScannerFailure) -> Void)?
     public let instructionText: String?
+    public let successText: String?
 
-    public init(targetTypes: [AVMetadataObject.ObjectType] = [], instructionText: String? = nil) {
+    public init(targetTypes: [AVMetadataObject.ObjectType] = [], instructionText: String? = nil, successText: String? = nil) {
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         if targetTypes.count > 0 {
             self.targetTypes = targetTypes
@@ -24,12 +25,19 @@ public class BarcodeScannerViewController: UIViewController {
             self.targetTypes = BarcodeType.allCases.map { $0.metadataObjectType }
         }
         self.instructionText = instructionText
+        self.successText = successText
         self.statusBar = ScannerStatusBar(instructionText: instructionText)
         let xImage = UIImage.sldsActionIcon(.remove, with: .white, andBGColor: .clear, andSize: 45.0)
         closeButton = UIButton(type: .custom)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.setBackgroundImage(xImage, for: .normal)
         closeButton.sizeToFit()
+        let checkImage = UIImage.sldsActionIcon(.check
+        , with: .white, andBGColor: UIColor(red: 0.02, green: 0.52, blue: 0.29, alpha: 1.00), andSize: 55.0)
+        successIcon = UIImageView(image: checkImage)
+        successIcon.translatesAutoresizingMaskIntoConstraints = false
+        successIcon.sizeToFit()
+        successIcon.isHidden = true
         super.init(nibName: nil, bundle: nil)
         closeButton.addTarget(self, action: #selector(cancelCaptureSession(sender:)), for: .touchUpInside)
     }
@@ -82,6 +90,7 @@ public class BarcodeScannerViewController: UIViewController {
         let overlay = createOverlayView()
         view.addSubview(overlay)
         view.addSubview(closeButton)
+        view.addSubview(successIcon)
         setupOverlayConstraints(overlay: overlay)
         overlayView = overlay
     }
@@ -143,6 +152,10 @@ public class BarcodeScannerViewController: UIViewController {
         let closeX = NSLayoutConstraint(item: closeButton, attribute: .right, relatedBy: .equal, toItem: overlay, attribute: .right, multiplier: 1.0, constant: -12.0)
         let closeY = NSLayoutConstraint(item: closeButton, attribute: .top, relatedBy: .equal, toItem: overlay, attribute: .top, multiplier: 1.0, constant: 44.0)
         view.addConstraints([closeX, closeY])
+
+        let checkX = NSLayoutConstraint(item: successIcon, attribute: .centerX, relatedBy: .equal, toItem: statusBar, attribute: .centerX, multiplier: 1.0, constant: 0.0)
+        let checkY = NSLayoutConstraint(item: successIcon, attribute: .top, relatedBy: .equal, toItem: statusBar, attribute: .bottom, multiplier: 1.0, constant: 30.0)
+        view.addConstraints([checkX, checkY])
     }
 
     private func createReticleLayer(overlay: UIView, verticalOffset: CGFloat) -> CAShapeLayer {
@@ -167,14 +180,26 @@ public class BarcodeScannerViewController: UIViewController {
     }
 
     public func resume() {
+        configureForScan()
         if !captureSession.isRunning {
             captureSession.startRunning()
         }
     }
 
+    func configureForSuccess() {
+        statusBar.configureText(text: successText)
+        successIcon.isHidden = false
+    }
+
+    func configureForScan() {
+        statusBar.configureText(text: instructionText)
+        successIcon.isHidden = true
+    }
+
     private var overlayView: UIView?
     private let statusBar: ScannerStatusBar
     private let closeButton: UIButton
+    private let successIcon: UIImageView
     private let captureSession = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer
     private let targetTypes: [AVMetadataObject.ObjectType]
@@ -187,6 +212,7 @@ extension BarcodeScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
             guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else { return }
             guard let barcode = Barcode(machineReadableCode: readableObject) else { return }
             captureSession.stopRunning()
+            configureForSuccess()
             AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
             onCapture?(barcode)
         }
@@ -222,6 +248,11 @@ private class ScannerStatusBar: UIView {
         if instructionText == nil {
             self.isHidden = true
         }
+    }
+
+    func configureText(text: String?) {
+        label.text = text
+        label.isHidden = text == nil
     }
 
     required init?(coder: NSCoder) {

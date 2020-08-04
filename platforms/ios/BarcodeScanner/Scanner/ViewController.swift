@@ -47,13 +47,15 @@ class ViewController: UIViewController {
         }
         storeAndResume = resume
         let allTypes = BarcodeType.allCases.map { $0.rawValue }
-        let options = ScannerOptions(barcodeTypes: allTypes)
+        let options = ScannerOptions(barcodeTypes: allTypes, instructionText: "Scan", successText: "Scanned!")
         plugin?.beginCapture(options: options, callback: resume)
     }
 
     func continueScanning() {
-        if let resume = self.storeAndResume {
-            plugin?.resumeCapture(callback: resume)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            if let resume = self.storeAndResume {
+                self.plugin?.resumeCapture(callback: resume)
+            }
         }
     }
 
