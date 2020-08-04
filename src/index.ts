@@ -51,6 +51,8 @@ export enum BarcodeScannerFailureCode {
 
 export interface BarcodeScannerOptions {
   barcodeTypes: BarcodeType[];
+  instructionText: string | null;
+  successText: string | null
 }
 
 export interface BarcodeScanner {
@@ -62,7 +64,7 @@ export interface BarcodeScanner {
 
   // Resume an existing scanning session using options from beginCapture
   resumeCapture(
-      callback: (barcode: Barcode, error: BarcodeScannerFailure) => void
+    callback: (barcode: Barcode, error: BarcodeScannerFailure) => void
   ): void;
 
   // End a capture session and dismiss the scanner
