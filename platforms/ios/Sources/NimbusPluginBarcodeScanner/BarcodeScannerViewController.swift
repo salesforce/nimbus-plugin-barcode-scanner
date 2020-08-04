@@ -53,7 +53,7 @@ public class BarcodeScannerViewController: UIViewController {
     override public func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         if let overlay = overlayView {
-            overlay.layer.mask = createReticleLayer(overlay: overlay, verticalOffset: toolbar?.frame.height ?? 0.0)
+            overlay.layer.mask = createReticleLayer(overlay: overlay, verticalOffset: 0.0)
         }
         view.bringSubviewToFront(statusBar)
     }
@@ -73,23 +73,10 @@ public class BarcodeScannerViewController: UIViewController {
         view.layer.addSublayer(previewLayer)
         view.addSubview(statusBar)
 
-        // add toolbar
-        let toolbarView = UIToolbar(frame: CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 44)))
-        toolbar = toolbarView
-        toolbarView.translatesAutoresizingMaskIntoConstraints = false
-        toolbarView.barStyle = .blackTranslucent
-        toolbarView.isTranslucent = true
-        view.addSubview(toolbarView)
-        setupToolbarConstraints(toolbar: toolbarView)
-
         let overlay = createOverlayView()
         view.addSubview(overlay)
         setupOverlayConstraints(overlay: overlay)
         overlayView = overlay
-
-        // cancel button
-        let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelCaptureSession(sender:)))
-        toolbarView.items = [cancelButton, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: self, action: nil)]
     }
     
     fileprivate func buildCapture() {
@@ -135,20 +122,10 @@ public class BarcodeScannerViewController: UIViewController {
         return overlay
     }
 
-    private func setupToolbarConstraints(toolbar: UIToolbar) {
-        var constraints: [NSLayoutConstraint] = []
-        constraints.append(NSLayoutConstraint(item: toolbar, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 44.0))
-        constraints.append(NSLayoutConstraint(item: toolbar, attribute: .width, relatedBy: .equal, toItem: view, attribute: .width, multiplier: 1.0, constant: 0.0))
-        let guide = view.safeAreaLayoutGuide
-        constraints.append(toolbar.topAnchor.constraint(equalToSystemSpacingBelow: guide.topAnchor, multiplier: 1.0))
-        view.addConstraints(constraints)
-    }
-
     private func setupOverlayConstraints(overlay: UIView) {
-        guard let toolbarView = toolbar else { return }
-        let views = ["overlay": overlay, "toolbar": toolbarView, "status": statusBar]
+        let views = ["overlay": overlay, "status": statusBar]
         let horizontal = NSLayoutConstraint.constraints(withVisualFormat: "H:|[overlay]|", metrics: nil, views: views)
-        let vertical = NSLayoutConstraint.constraints(withVisualFormat: "V:[toolbar][overlay]|", metrics: nil, views: views)
+        let vertical = NSLayoutConstraint.constraints(withVisualFormat: "V:|[overlay]|", metrics: nil, views: views)
         let top = (overlay.frame.height / 2) + 168.0
         let statusVertical = NSLayoutConstraint(item: statusBar, attribute: .top, relatedBy: .equal, toItem: overlay, attribute: .centerY, multiplier: 1.0, constant: top)
         let statusHorizontal = NSLayoutConstraint(item: statusBar, attribute: .centerX, relatedBy: .equal, toItem: overlay, attribute: .centerX, multiplier: 1.0, constant: 0.0)
@@ -184,7 +161,6 @@ public class BarcodeScannerViewController: UIViewController {
         }
     }
 
-    private var toolbar: UIToolbar?
     private var overlayView: UIView?
     private let statusBar: ScannerStatusBar
     private let captureSession = AVCaptureSession()
