@@ -32,6 +32,7 @@ public class BarcodeScannerViewController: UIViewController {
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.setBackgroundImage(xImage, for: .normal)
         closeButton.sizeToFit()
+        closeButton.accessibilityLabel = "Close"
         let checkImage = UIImage.sldsActionIcon(.check
         , with: .white, andBGColor: UIColor(red: 0.02, green: 0.52, blue: 0.29, alpha: 1.00), andSize: 55.0)
         successIcon = UIImageView(image: checkImage)
