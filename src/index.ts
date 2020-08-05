@@ -51,8 +51,8 @@ export enum BarcodeScannerFailureCode {
 
 export interface BarcodeScannerOptions {
   barcodeTypes: BarcodeType[];
-  instructionText: string | null;
-  successText: string | null
+  instructionText?: string;
+  successText?: string;
 }
 
 export interface BarcodeScanner {
