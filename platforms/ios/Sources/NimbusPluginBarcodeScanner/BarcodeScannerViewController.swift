@@ -187,32 +187,20 @@ public class BarcodeScannerViewController: UIViewController {
         }
     }
 
-    func configureForSuccess(barcodeBounds: CGRect?) {
+    func configureForSuccess() {
         statusBar.configureText(text: successText)
         successIcon.isHidden = false
-        if let barcodeBounds = barcodeBounds {
-            let boundsToDraw = previewLayer.layerRectConverted(fromMetadataOutputRect: barcodeBounds)
-            let outline = UIView(frame: boundsToDraw)
-            outlineView = outline
-            outline.layer.borderColor = UIColor(red: 0.00, green: 0.44, blue: 0.82, alpha: 1.00).cgColor
-            outline.layer.borderWidth = 2.0
-            outline.layer.cornerRadius = 5.0
-            view.addSubview(outline)
-        }
     }
 
     func configureForScan() {
         statusBar.configureText(text: instructionText)
         successIcon.isHidden = true
-        outlineView?.removeFromSuperview()
-        outlineView = nil
     }
 
     private var overlayView: UIView?
     private let statusBar: ScannerStatusBar
     private let closeButton: UIButton
     private let successIcon: UIImageView
-    private var outlineView: UIView?
     private let captureSession = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer
     private let targetTypes: [AVMetadataObject.ObjectType]
@@ -225,7 +213,7 @@ extension BarcodeScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
             guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else { return }
             guard let barcode = Barcode(machineReadableCode: readableObject) else { return }
             captureSession.stopRunning()
-            configureForSuccess(barcodeBounds: metadataObject.bounds)
+            configureForSuccess()
             AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
             onCapture?(barcode)
         }
