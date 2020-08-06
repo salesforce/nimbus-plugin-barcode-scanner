@@ -39,6 +39,11 @@ public class BarcodeScannerViewController: UIViewController {
         successIcon.translatesAutoresizingMaskIntoConstraints = false
         successIcon.sizeToFit()
         successIcon.isHidden = true
+        successBorder = UIView()
+        successBorder.translatesAutoresizingMaskIntoConstraints = false
+        successBorder.layer.cornerRadius = 4.0
+        successBorder.backgroundColor = UIColor(red: 0.08, green: 0.54, blue: 0.93, alpha: 1.00)
+        successBorder.isHidden = true
         super.init(nibName: nil, bundle: nil)
         closeButton.addTarget(self, action: #selector(cancelCaptureSession(sender:)), for: .touchUpInside)
     }
@@ -92,6 +97,7 @@ public class BarcodeScannerViewController: UIViewController {
         view.addSubview(overlay)
         view.addSubview(closeButton)
         view.addSubview(successIcon)
+        overlay.addSubview(successBorder)
         setupOverlayConstraints(overlay: overlay)
         overlayView = overlay
     }
@@ -143,12 +149,21 @@ public class BarcodeScannerViewController: UIViewController {
         let views = ["overlay": overlay, "status": statusBar]
         let horizontal = NSLayoutConstraint.constraints(withVisualFormat: "H:|[overlay]|", metrics: nil, views: views)
         let vertical = NSLayoutConstraint.constraints(withVisualFormat: "V:|[overlay]|", metrics: nil, views: views)
-        let top = (overlay.frame.height / 2) + 168.0
-        let statusVertical = NSLayoutConstraint(item: statusBar, attribute: .top, relatedBy: .equal, toItem: overlay, attribute: .centerY, multiplier: 1.0, constant: top)
+
+        let successBorderMargin = margin - 5
+        let borderWidth = NSLayoutConstraint(item: successBorder, attribute: .width, relatedBy: .equal, toItem: overlay, attribute: .width, multiplier: 1.0, constant: ((successBorderMargin * 2) * -1))
+        let borderHeight = NSLayoutConstraint(item: successBorder, attribute: .height, relatedBy: .equal, toItem: successBorder, attribute: .width, multiplier: 1.0, constant: 0.0)
+        let borderX = NSLayoutConstraint(item: successBorder, attribute: .centerX, relatedBy: .equal, toItem: overlay, attribute: .centerX, multiplier: 1.0, constant: 0.0)
+        let borderY = NSLayoutConstraint(item: successBorder, attribute: .centerY, relatedBy: .equal, toItem: overlay, attribute: .centerY, multiplier: 1.0, constant: 0.0)
+        overlay.addConstraints([borderWidth, borderHeight, borderX, borderY])
+
+        let statusVertical = NSLayoutConstraint(item: statusBar, attribute: .top, relatedBy: .equal, toItem: successBorder, attribute: .bottom, multiplier: 1.0, constant: margin / 2)
         let statusHorizontal = NSLayoutConstraint(item: statusBar, attribute: .centerX, relatedBy: .equal, toItem: overlay, attribute: .centerX, multiplier: 1.0, constant: 0.0)
+        let statusLeft = NSLayoutConstraint(item: statusBar, attribute: .left, relatedBy: .equal, toItem: overlay, attribute: .left, multiplier: 1.0, constant: margin)
+        let statusRight = NSLayoutConstraint(item: statusBar, attribute: .right, relatedBy: .equal, toItem: overlay, attribute: .right, multiplier: 1.0, constant: (margin * -1))
         view.addConstraints(horizontal)
         view.addConstraints(vertical)
-        view.addConstraints([statusVertical, statusHorizontal])
+        view.addConstraints([statusVertical, statusHorizontal, statusLeft, statusRight])
 
         let closeX = NSLayoutConstraint(item: closeButton, attribute: .right, relatedBy: .equal, toItem: overlay, attribute: .right, multiplier: 1.0, constant: -12.0)
         let closeY = NSLayoutConstraint(item: closeButton, attribute: .top, relatedBy: .equal, toItem: overlay, attribute: .top, multiplier: 1.0, constant: 44.0)
@@ -162,8 +177,8 @@ public class BarcodeScannerViewController: UIViewController {
     private func createReticleLayer(overlay: UIView, verticalOffset: CGFloat) -> CAShapeLayer {
         let shape = CAShapeLayer()
         let path = CGMutablePath()
-        let width: CGFloat = 304.0
-        let height: CGFloat = 304.0
+        let width: CGFloat = overlay.frame.width - (margin * 2)
+        let height: CGFloat = width
         let x: CGFloat = overlay.frame.midX - (width / 2)
         let y: CGFloat = (overlay.frame.midY - (height / 2)) - verticalOffset
         path.addRoundedRect(in: CGRect(x: x, y: y, width: width, height: height), cornerWidth: 4, cornerHeight: 4)
@@ -190,20 +205,24 @@ public class BarcodeScannerViewController: UIViewController {
     func configureForSuccess() {
         statusBar.configureText(text: successText)
         successIcon.isHidden = false
+        successBorder.isHidden = false
     }
 
     func configureForScan() {
         statusBar.configureText(text: instructionText)
         successIcon.isHidden = true
+        successBorder.isHidden = true
     }
 
     private var overlayView: UIView?
     private let statusBar: ScannerStatusBar
     private let closeButton: UIButton
     private let successIcon: UIImageView
+    private let successBorder: UIView
     private let captureSession = AVCaptureSession()
     private var previewLayer: AVCaptureVideoPreviewLayer
     private let targetTypes: [AVMetadataObject.ObjectType]
+    private let margin: CGFloat = 36.0
 }
 
 extension BarcodeScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
@@ -238,13 +257,12 @@ private class ScannerStatusBar: UIView {
         self.addSubview(label)
         self.translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = UIColor(red: 0.03, green: 0.03, blue: 0.03, alpha: 1.00)
-        let width = NSLayoutConstraint(item: self, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 304.0)
         let height = NSLayoutConstraint(item: self, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 50.0)
         let labelX = NSLayoutConstraint(item: label, attribute: .centerX, relatedBy: .equal, toItem: self, attribute: .centerX, multiplier: 1.0, constant: 0.0)
         let labelY = NSLayoutConstraint(item: label, attribute: .centerY, relatedBy: .equal, toItem: self, attribute: .centerY, multiplier: 1.0, constant: 0.0)
         let labelWidth = NSLayoutConstraint(item: label, attribute: .width, relatedBy: .equal, toItem: self, attribute: .width, multiplier: 1.0, constant: 0.0)
         let labelHeight = NSLayoutConstraint(item: label, attribute: .height, relatedBy: .equal, toItem: self, attribute: .height, multiplier: 1.0, constant: 0.0)
-        self.addConstraints([width, height, labelX, labelY, labelWidth, labelHeight])
+        self.addConstraints([height, labelX, labelY, labelWidth, labelHeight])
         self.layer.cornerRadius = 4
         if instructionText == nil {
             self.isHidden = true
