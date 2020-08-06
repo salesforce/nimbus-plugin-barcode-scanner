@@ -10,7 +10,15 @@ import WebKit
 import Nimbus
 
 public struct ScannerOptions: Decodable {
-    let barcodeTypes: [String]
+    public let barcodeTypes: [String]
+    public let instructionText: String?
+    public let successText: String?
+
+    public init(barcodeTypes: [String], instructionText: String? = nil, successText: String? = nil) {
+        self.barcodeTypes = barcodeTypes
+        self.instructionText = instructionText
+        self.successText = successText
+    }
 }
 
 public class BarcodeScannerPlugin {
@@ -25,7 +33,7 @@ public class BarcodeScannerPlugin {
         self.presenter = presenter
     }
     
-    func beginCapture(options: ScannerOptions,
+    public func beginCapture(options: ScannerOptions,
                       callback: @escaping (_ barcode: Barcode?, _ error: BarcodeScannerFailure?) -> Void) {
         let capture = checkPermissions(callback) { [weak self] in
             guard let strongSelf = self else {
@@ -43,7 +51,7 @@ public class BarcodeScannerPlugin {
             let captureController = BarcodeScannerViewController(
                 targetTypes: barcodeTypes.compactMap {
                     BarcodeType(rawValue: $0)?.metadataObjectType
-                })
+            }, instructionText: options.instructionText, successText: options.successText)
 
             if #available(iOS 13, *) {
                 captureController.modalPresentationStyle = .fullScreen
@@ -63,7 +71,7 @@ public class BarcodeScannerPlugin {
         cameraService.requestAccess(capture)
     }
 
-    func resumeCapture(callback: @escaping (_ barcode: Barcode?, _ error: BarcodeScannerFailure?) -> Void) {
+    public func resumeCapture(callback: @escaping (_ barcode: Barcode?, _ error: BarcodeScannerFailure?) -> Void) {
         guard let controller = currentScannerController else {
             callback(.none, .unknownReason("You must call beginCapture before being able to call resumeCapture."))
             return
@@ -80,7 +88,7 @@ public class BarcodeScannerPlugin {
         controller.resume()
     }
 
-    func endCapture() {
+    public func endCapture() {
         currentScannerController?.dismiss(animated: true, completion: nil)
         currentScannerController = nil
     }

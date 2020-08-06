@@ -20,10 +20,12 @@ struct CameraService {
         switch self.authorizationStatus {
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { auth in
-                if auth {
-                    callback(.success(()))
-                } else {
-                    callback(.failure(.userDissabledPermission))
+                DispatchQueue.main.async {
+                    if auth {
+                        callback(.success(()))
+                    } else {
+                        callback(.failure(.userDissabledPermission))
+                    }
                 }
             }
             
