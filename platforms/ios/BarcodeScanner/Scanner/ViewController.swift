@@ -31,11 +31,11 @@ class ViewController: UIViewController {
         plugin?.beginCapture(options: options, callback: { (barcode, failure) in
             if let code = barcode {
                 self.barcodes.append(code)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    self.plugin?.endCapture()
+                }
             }
             self.tableView.reloadData()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                self.plugin?.endCapture()
-            }
         })
     }
 
