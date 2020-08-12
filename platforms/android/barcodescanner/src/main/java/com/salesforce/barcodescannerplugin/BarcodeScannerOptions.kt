@@ -20,9 +20,13 @@ class BarcodeScannerOptions(val barcodeTypes: List<BarcodeType> = listOf()) : Se
             return try {
                 val options = JSONObject(barcodeScannerOptions)
                 val barcodeTypes = options.getJSONArray("barcodeTypes")
-                val convertedTypes = mutableListOf<BarcodeType>()
-                for (i in 0 until barcodeTypes.length()) {
-                    convertedTypes.add(BarcodeType.valueOf(barcodeTypes.getString(i).toUpperCase()))
+                var convertedTypes = mutableListOf<BarcodeType>()
+                if (barcodeTypes.length() > 0) {
+                    for (i in 0 until barcodeTypes.length()) {
+                        convertedTypes.add(BarcodeType.valueOf(barcodeTypes.getString(i).toUpperCase()))
+                    }
+                } else {
+                    convertedTypes = enumValues<BarcodeType>().toMutableList()
                 }
                 BarcodeScannerOptions(convertedTypes)
             } catch (e: Exception) {
