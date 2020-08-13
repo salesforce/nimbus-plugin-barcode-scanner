@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~
   ~ Copyright (c) 2020, Salesforce.com, inc.
@@ -8,8 +9,10 @@
   -->
 
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle" >
-    <solid android:color="@color/transparent" />
-    <corners android:radius="@dimen/bounding_box_corner_radius" />
-    <stroke android:color="@color/white" android:width="@dimen/bounding_box_stroke_width" />
+    android:shape="oval">
+    <gradient
+        android:centerX="0.5"
+        android:centerY="0.5"
+        android:endColor="@color/success_scan_color"
+        android:startColor="@color/success_scan_color" />
 </shape>

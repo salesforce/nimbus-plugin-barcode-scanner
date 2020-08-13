@@ -19,18 +19,23 @@ class BarcodeScannerOptionsTests {
     fun `convert json to barcodeScannerOptions`() {
         val originalOptions = """
             {'barcodeTypes': 
-                ['code128', 'code39', 'upca', 'qr']
+                ['code128', 'code39', 'upca', 'qr'],
+             'instructionText': 'position properly',
+             'successText': 'found a barcode'
             }
         """.trimIndent()
-        val convertedType = BarcodeScannerOptions.fromJSON(originalOptions)
+        val options = BarcodeScannerOptions.fromJSON(originalOptions)
         assertEquals(
             listOf(
                 BarcodeType.CODE128,
                 BarcodeType.CODE39,
                 BarcodeType.UPCA,
                 BarcodeType.QR
-            ), convertedType.barcodeTypes
+            ), options.barcodeTypes
         )
+
+        assertEquals("position properly", options.instructionText)
+        assertEquals("found a barcode", options.successText)
     }
 
     @Test
@@ -54,5 +59,18 @@ class BarcodeScannerOptionsTests {
         """.trimIndent()
         val barcodeScannerOptions = BarcodeScannerOptions.fromJSON(originalOptions)
         assert(barcodeScannerOptions.barcodeTypes.count() == enumValues<BarcodeType>().count())
+    }
+
+    @Test
+    fun `default instruction and success text as empty string`() {
+        val options = BarcodeScannerOptions.fromJSON(
+            """
+            {'barcodeTypes': 
+                []
+            }
+        """
+        )
+        assertEquals("", options.instructionText);
+        assertEquals("", options.successText);
     }
 }

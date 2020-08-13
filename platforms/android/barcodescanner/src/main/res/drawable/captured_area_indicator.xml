@@ -7,9 +7,8 @@
   ~ For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
   ~
   -->
-
-<resources>
-  <dimen name="top_action_bar_height">64dp</dimen>
-  <dimen name="top_action_button_padding">4dp</dimen>
-  <dimen name="bounding_box_padding">8dp</dimen>
-</resources>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle" >
+    <solid android:color="@color/transparent" />
+    <stroke android:color="#148AED" android:width="4dp" />
+</shape>

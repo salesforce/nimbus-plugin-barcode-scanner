@@ -13,7 +13,11 @@ import org.json.JSONObject
 import java.io.Serializable
 import java.lang.Exception
 
-class BarcodeScannerOptions(val barcodeTypes: List<BarcodeType> = listOf()) : Serializable {
+class BarcodeScannerOptions(
+    val barcodeTypes: List<BarcodeType> = listOf(),
+    val instructionText: String = "",
+    val successText: String = ""
+    ) : Serializable {
     companion object {
         @JvmStatic
         fun fromJSON(barcodeScannerOptions: String): BarcodeScannerOptions {
@@ -28,7 +32,9 @@ class BarcodeScannerOptions(val barcodeTypes: List<BarcodeType> = listOf()) : Se
                 } else {
                     convertedTypes = enumValues<BarcodeType>().toMutableList()
                 }
-                BarcodeScannerOptions(convertedTypes)
+                val instructionText = options.optString("instructionText", "")
+                val successText = options.optString("successText", "")
+                BarcodeScannerOptions(convertedTypes, instructionText, successText)
             } catch (e: Exception) {
                 BarcodeScannerOptions()
             }
