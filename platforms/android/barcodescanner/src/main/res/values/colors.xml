@@ -13,6 +13,7 @@
   <color name="white">#FFFFFFFF</color>
   <color name="black">#FF000000</color>
   <color name="veil">#AA000000</color>
+  <color name="ring_color">#12B8E5</color>
   <color name="status_text_color">#DDDDDD</color>
   <color name="success_scan_color">#00AD57</color>
 </resources>

@@ -11,19 +11,17 @@ package com.salesforce.barcodescannerplugin
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.ImageProxy
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.Lifecycle
 import com.google.firebase.ml.common.FirebaseMLException
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
@@ -42,8 +40,9 @@ class BarcodePluginActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
     private lateinit var scanningIndicator: View
     private lateinit var scanSuccessIndicator: View
-    private lateinit var capturedBarcodeImagePreview: ImageView
+    private lateinit var focusBox: View
     private lateinit var frozenFrame: ImageView
+    private lateinit var frozenFrameWrapper: ViewGroup
     private val eventBus = EventBus.getDefault()
     private lateinit var mainHandler: Handler
     private var barcodeScannerOptions: BarcodeScannerOptions? = null
@@ -74,8 +73,9 @@ class BarcodePluginActivity : AppCompatActivity() {
         statusText = findViewById(R.id.status_text)
         scanningIndicator = findViewById(R.id.scanning_indicator)
         scanSuccessIndicator = findViewById(R.id.scan_success_indicator)
-        capturedBarcodeImagePreview = findViewById(R.id.captured_barcode_image_preview)
         frozenFrame = findViewById(R.id.frozen_frame)
+        frozenFrameWrapper = findViewById(R.id.frozen_frame_wrapper)
+        focusBox = findViewById(R.id.focus_box)
         lifecycle.addObserver(viewFinder)
 
         barcodeScannerOptions =
@@ -228,8 +228,8 @@ class BarcodePluginActivity : AppCompatActivity() {
         }
         scanningIndicator.visibility = VISIBLE
         scanSuccessIndicator.visibility = GONE
-        capturedBarcodeImagePreview.visibility = GONE
-        frozenFrame.visibility = GONE
+        focusBox.isSelected = false
+        frozenFrameWrapper.visibility = GONE
     }
 
     private fun updateViewsForScanSuccess(barcode: FirebaseVisionBarcode, image: ImageProxy) {
@@ -242,35 +242,25 @@ class BarcodePluginActivity : AppCompatActivity() {
 
         scanningIndicator.visibility = GONE
         scanSuccessIndicator.visibility = VISIBLE
+        focusBox.isSelected = true
 
         val previewBitmap = Utils.convertImageToBitmap(image)
         frozenFrame.setImageBitmap(previewBitmap)
-        frozenFrame.visibility = VISIBLE
+        frozenFrameWrapper.visibility = VISIBLE
+
 
         barcode.boundingBox?.apply {
-            // resize the barcode region indicator and move to where the barcode is
-            val bounds =
-                this.extendRectBy(resources.getDimensionPixelSize(R.dimen.bounding_box_padding))
-                    .scaleRectBy(getPreviewToImageXRation(image), getPreviewToImageYRation(image))
+            // resize the barcode region indicator and move to where th`e barcode is
+            val bounds = this.scaleRectBy(getPreviewToImageXRation(image), getPreviewToImageYRation(image))
 
-            capturedBarcodeImagePreview.translationX = bounds.left.toFloat()
-            capturedBarcodeImagePreview.translationY = bounds.top.toFloat()
-            capturedBarcodeImagePreview.layoutParams = ConstraintLayout.LayoutParams(
-                bounds.right - bounds.left,
-                bounds.bottom - bounds.top
-            )
-            capturedBarcodeImagePreview.visibility = VISIBLE
+            val focusBoxCenterX = focusBox.left + focusBox.width/2
+            val focusBoxCenterY = focusBox.top + focusBox.height/2
 
-            val cropRect = Rect(this).apply {
-                this.intersect(0, 0, previewBitmap.width, previewBitmap.height) }
-            val croppedBmp = Bitmap.createBitmap(
-                previewBitmap,
-                cropRect.left,
-                cropRect.top,
-                cropRect.width(),
-                cropRect.height()
-            )
-            capturedBarcodeImagePreview.setImageBitmap(croppedBmp)
+            val barcodeCenterX = (bounds.left + bounds.right)/2
+            val barcodeCenterY = (bounds.top + bounds.bottom)/2
+
+            frozenFrame.translationX = (focusBoxCenterX - barcodeCenterX).toFloat()
+            frozenFrame.translationY = (focusBoxCenterY - barcodeCenterY).toFloat()
         }
     }
 
