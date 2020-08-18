@@ -4,4 +4,5 @@
     <stroke
         android:width="@dimen/focus_box_stroke_width"
         android:color="@color/veil" />
+    <corners android:radius="@dimen/focus_box_corner_radius" />
 </shape>

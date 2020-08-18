@@ -30,11 +30,12 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/black"
-            tools:background="@color/transparent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            tools:background="@color/transparent">
+
             <ImageView
                 android:id="@+id/frozen_frame"
                 android:layout_width="match_parent"
@@ -42,11 +43,11 @@
                 android:scaleType="fitXY" />
         </FrameLayout>
 
-        <View
+        <com.salesforce.barcodescannerplugin.BarcodeScannerFocusIndicatorView
             android:id="@+id/focus_box"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@drawable/focus_box_selector_bg"
+            android:foreground="@drawable/focus_box_selector_bg"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="H,1:1"
             app:layout_constraintEnd_toEndOf="parent"

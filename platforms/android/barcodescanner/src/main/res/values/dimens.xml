@@ -12,4 +12,5 @@
   <dimen name="top_action_bar_height">64dp</dimen>
   <dimen name="top_action_button_padding">4dp</dimen>
   <dimen name="focus_box_stroke_width">4dp</dimen>
+  <dimen name="focus_box_corner_radius">8dp</dimen>
 </resources>
