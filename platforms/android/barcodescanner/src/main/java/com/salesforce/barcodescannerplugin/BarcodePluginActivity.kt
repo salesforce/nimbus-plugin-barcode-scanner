@@ -14,6 +14,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Vibrator
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -242,22 +243,27 @@ class BarcodePluginActivity : AppCompatActivity() {
 
         scanningIndicator.visibility = GONE
         scanSuccessIndicator.visibility = VISIBLE
+
         focusBox.isSelected = true
+        (getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(100)
 
         val previewBitmap = Utils.convertImageToBitmap(image)
         frozenFrame.setImageBitmap(previewBitmap)
         frozenFrameWrapper.visibility = VISIBLE
 
-
         barcode.boundingBox?.apply {
             // resize the barcode region indicator and move to where th`e barcode is
-            val bounds = this.scaleRectBy(getPreviewToImageXRation(image), getPreviewToImageYRation(image))
+            val bounds = this.scaleRectBy(
+                getPreviewToImageXRation(image), getPreviewToImageYRation(
+                    image
+                )
+            )
 
-            val focusBoxCenterX = focusBox.left + focusBox.width/2
-            val focusBoxCenterY = focusBox.top + focusBox.height/2
+            val focusBoxCenterX = focusBox.left + focusBox.width / 2
+            val focusBoxCenterY = focusBox.top + focusBox.height / 2
 
-            val barcodeCenterX = (bounds.left + bounds.right)/2
-            val barcodeCenterY = (bounds.top + bounds.bottom)/2
+            val barcodeCenterX = (bounds.left + bounds.right) / 2
+            val barcodeCenterY = (bounds.top + bounds.bottom) / 2
 
             frozenFrame.translationX = (focusBoxCenterX - barcodeCenterX).toFloat()
             frozenFrame.translationY = (focusBoxCenterY - barcodeCenterY).toFloat()
@@ -281,7 +287,6 @@ class BarcodePluginActivity : AppCompatActivity() {
             if (image.imageInfo.rotationDegrees == 0 || image.imageInfo.rotationDegrees == 270) image.height else image.width
         return viewFinder.height.toFloat() / height
     }
-
 
     companion object {
         private const val OPTIONS_VALUE = "OptionsValue"

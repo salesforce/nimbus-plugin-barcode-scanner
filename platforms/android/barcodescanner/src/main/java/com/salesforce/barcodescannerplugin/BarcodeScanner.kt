@@ -14,12 +14,12 @@ package com.salesforce.barcodescannerplugin
  */
 interface BarcodeScanner {
     fun beginCapture(
-        options: BarcodeScannerOptions?,
-        callback: (barcode: BarcodeScannerResult?, failure: BarcodeScannerFailure?) -> Unit
+        options: BarcodeScannerOptions,
+        callback: (barcode: BarcodeScannerResult, failure: BarcodeScannerFailure) -> Unit
     )
 
     fun resumeCapture(
-        callback: (barcode: BarcodeScannerResult?, failure: BarcodeScannerFailure?) -> Unit
+        callback: (barcode: BarcodeScannerResult, failure: BarcodeScannerFailure) -> Unit
     )
 
     fun endCapture()

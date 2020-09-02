@@ -17,11 +17,12 @@ import com.salesforce.nimbus.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import kotlinx.serialization.Serializable
 
-@PluginOptions("barcodeScanner")
+@PluginOptions(name = "barcodeScanner")
 class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanner {
 
-    private var scannerCallback: ((barcode: BarcodeScannerResult?, failure: BarcodeScannerFailure?) -> Unit)? =
+    private var scannerCallback: ((barcode: BarcodeScannerResult, failure: BarcodeScannerFailure) -> Unit)? =
         null
     private lateinit var barcodeOptions: BarcodeScannerOptions
     private val eventBus = EventBus.getDefault()
@@ -32,8 +33,8 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
 
     @BoundMethod
     override fun beginCapture(
-        options: BarcodeScannerOptions?,
-        callback: (barcode: BarcodeScannerResult?, failure: BarcodeScannerFailure?) -> Unit
+        options: BarcodeScannerOptions,
+        callback: (barcode: BarcodeScannerResult, failure: BarcodeScannerFailure) -> Unit
     ) {
         barcodeOptions = options ?: BarcodeScannerOptions(listOf())
         scannerCallback = callback
@@ -41,7 +42,7 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
     }
 
     @BoundMethod
-    override fun resumeCapture(callback: (barcode: BarcodeScannerResult?, failure: BarcodeScannerFailure?) -> Unit) {
+    override fun resumeCapture(callback: (barcode: BarcodeScannerResult, failure: BarcodeScannerFailure) -> Unit) {
         scannerCallback = callback
         startScanner()
     }
@@ -66,7 +67,7 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
     fun onMessage(event: SuccessfulScanEvent) {
         eventBus.removeStickyEvent(event)
         if (scannerCallback != null) {
-            scannerCallback?.invoke(event.barcode, null)
+            scannerCallback?.invoke(event.barcode, BarcodeScannerFailure(BarcodeScannerFailureCode.USER_DISMISSED_SCANNER))
         } else {
             showBridgeBrokenMessage()
         }
@@ -77,7 +78,7 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
         eventBus.removeStickyEvent(event)
         if (scannerCallback != null) {
             scannerCallback?.invoke(
-                null,
+                BarcodeScannerResult(BarcodeType.CODE128, "abc"),
                 BarcodeScannerFailure(event.errorCode, event.exception?.toString())
             )
         } else {
@@ -85,8 +86,9 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
         }
     }
 
-    override fun cleanup(webView: WebView, bridge: Bridge) = unRegisterEventBus()
-
+    override fun <JavascriptEngine, EncodedType> cleanup(runtime: Runtime<JavascriptEngine, EncodedType>) {
+        unRegisterEventBus()
+    }
 
     /**
      * launch the BarcodePluginActivity to do the scanning

@@ -38,8 +38,15 @@ android {
 dependencies {
     def camerax_version = "1.0.0-beta03"
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version")
-    implementation("com.salesforce.nimbus:nimbus:$nimbus_version")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
+
+    implementation("com.salesforce.nimbus:core:$nimbus_version")
+    implementation("com.salesforce.nimbus:annotations:$nimbus_version")
+    implementation("com.salesforce.nimbus:bridge-webview:$nimbus_version")
+    kapt("com.salesforce.nimbus:compiler-webview:$nimbus_version")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlin_serialization")
+
     implementation("com.google.firebase:firebase-ml-vision:24.0.3")
     implementation("com.google.firebase:firebase-ml-vision-object-detection-model:19.0.5")
     implementation("com.google.android.material:material:1.2.0-alpha06")
@@ -53,8 +60,6 @@ dependencies {
     implementation("androidx.core:core-ktx:1.2.0")
     implementation("org.greenrobot:eventbus:3.1.1")
     implementation("androidx.appcompat:appcompat:1.1.0")
-
-    kapt "com.salesforce.nimbus:nimbus-compiler:$nimbus_version"
 
     testImplementation("junit:junit:4.13")
     testImplementation("org.json:json:20190722")

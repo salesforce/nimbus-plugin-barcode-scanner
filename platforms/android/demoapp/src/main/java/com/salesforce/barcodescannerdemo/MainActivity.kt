@@ -13,44 +13,49 @@ import android.os.Bundle
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
 import com.salesforce.barcodescannerplugin.BarcodeScannerPlugin
-import com.salesforce.barcodescannerplugin.BarcodeScannerPluginBinder
-import com.salesforce.nimbus.Bridge
-import com.salesforce.nimbus.plugins.DeviceInfoPlugin
-import com.salesforce.nimbus.plugins.DeviceInfoPluginBinder
-import com.salesforce.nimbusjs.NimbusJSUtilities
+import com.salesforce.barcodescannerplugin.webViewBinder
+import com.salesforce.nimbus.BoundPlugin
+import com.salesforce.nimbus.NimbusJSUtilities
+import com.salesforce.nimbus.bridge.webview.WebViewBridge
+import com.salesforce.nimbus.bridge.webview.bridge
+import com.salesforce.nimbus.core.plugins.DeviceInfoPlugin
 import kotlinx.android.synthetic.main.activity_main.plugin_webview
 import java.nio.charset.StandardCharsets
 
 class MainActivity : AppCompatActivity() {
 
+    @BoundPlugin
     private lateinit var barcodeScannerPlugin: BarcodeScannerPlugin
-    private val nimbusBridge = Bridge()
+    @BoundPlugin
+    private lateinit var deviceInfoPlugin: DeviceInfoPlugin
+
+    private lateinit var webViewBridge: WebViewBridge
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_main)
+        WebView.setWebContentsDebuggingEnabled(true)
 
         // initial the demo webview html content
         initializeDemoWebViewHtmlContent()
 
         // register the plugins with the webview in the nimbus bridge
         barcodeScannerPlugin = BarcodeScannerPlugin(this)
-        nimbusBridge.add(BarcodeScannerPluginBinder(barcodeScannerPlugin))
+        deviceInfoPlugin = DeviceInfoPlugin(this)
 
-        nimbusBridge.add(DeviceInfoPluginBinder(DeviceInfoPlugin(this)))
+        webViewBridge = plugin_webview.bridge {
+//            bind { deviceInfoPlugin.webViewBinder() }
+            bind { barcodeScannerPlugin.webViewBinder() }
+        }
 
-        nimbusBridge.attach(plugin_webview)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        nimbusBridge.detach()
+        webViewBridge.detach()
     }
 
     private fun initializeDemoWebViewHtmlContent() {
-        WebView.setWebContentsDebuggingEnabled(true)
-
         val sourceHtml = this.resources.assets.open("webview.html")
         val htmlStream = NimbusJSUtilities.injectedNimbusStream(sourceHtml.buffered(), this)
         val html = htmlStream.bufferedReader(StandardCharsets.UTF_8).readText()

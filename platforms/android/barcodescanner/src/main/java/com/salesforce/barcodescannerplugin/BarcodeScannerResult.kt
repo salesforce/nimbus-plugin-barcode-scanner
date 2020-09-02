@@ -9,13 +9,7 @@
 
 package com.salesforce.barcodescannerplugin
 
-import com.salesforce.nimbus.JSONSerializable
-import org.json.JSONObject
-import java.net.URLEncoder
+import kotlinx.serialization.Serializable
 
-data class BarcodeScannerResult(val type: BarcodeType, val value: String) : JSONSerializable {
-    override fun stringify() = JSONObject().apply {
-        put("type", type)
-        put("value", value)
-    }.toString()
-}
+@Serializable
+data class BarcodeScannerResult(val type: BarcodeType, val value: String)
