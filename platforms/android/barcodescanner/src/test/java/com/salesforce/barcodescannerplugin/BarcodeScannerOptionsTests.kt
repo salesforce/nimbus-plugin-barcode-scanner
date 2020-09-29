@@ -9,22 +9,29 @@
 
 package com.salesforce.barcodescannerplugin
 
+import kotlinx.serialization.ImplicitReflectionSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.parse
 import org.junit.Test
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 
+@ImplicitReflectionSerializer
 class BarcodeScannerOptionsTests {
+    private val json = Json(JsonConfiguration(encodeDefaults = false))
+
     @Test
     fun `convert json to barcodeScannerOptions`() {
         val originalOptions = """
-            {'barcodeTypes': 
-                ['code128', 'code39', 'upca', 'qr'],
-             'instructionText': 'position properly',
-             'successText': 'found a barcode'
+            {"barcodeTypes": 
+                ["code128", "code39", "upca", "qr"],
+             "instructionText": "position properly",
+             "successText": "found a barcode"
             }
         """.trimIndent()
-        val options = BarcodeScannerOptions.fromJSON(originalOptions)
+        val options = json.parse<BarcodeScannerOptions>(originalOptions)
         assertEquals(
             listOf(
                 BarcodeType.CODE128,
@@ -40,7 +47,7 @@ class BarcodeScannerOptionsTests {
 
     @Test
     fun `null json to barcodeScannerOptions`() {
-        val convertedType = BarcodeScannerOptions.fromJSON("")
+        val convertedType = json.parse<BarcodeScannerOptions>("{}")
         assertNotNull(convertedType)
     }
 
@@ -51,21 +58,21 @@ class BarcodeScannerOptionsTests {
     }
 
     @Test
-    fun `convert json to barcodeScannerOptions with all barcode types when the input array is empty`() {
+    fun `convert json to barcodeScannerOptions with empty barcode types`() {
         val originalOptions = """
-            {'barcodeTypes': 
+            {"barcodeTypes": 
                 []
             }
         """.trimIndent()
-        val barcodeScannerOptions = BarcodeScannerOptions.fromJSON(originalOptions)
-        assert(barcodeScannerOptions.barcodeTypes.count() == enumValues<BarcodeType>().count())
+        val barcodeScannerOptions = json.parse<BarcodeScannerOptions>(originalOptions)
+        assertEquals(0, barcodeScannerOptions.barcodeTypes.count())
     }
 
     @Test
     fun `default instruction and success text as empty string`() {
-        val options = BarcodeScannerOptions.fromJSON(
+        val options = json.parse<BarcodeScannerOptions>(
             """
-            {'barcodeTypes': 
+            {"barcodeTypes": 
                 []
             }
         """

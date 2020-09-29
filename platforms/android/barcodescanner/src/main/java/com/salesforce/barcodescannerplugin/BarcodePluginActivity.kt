@@ -222,7 +222,7 @@ class BarcodePluginActivity : AppCompatActivity() {
     }
 
     private fun updateViewsForStartScan() {
-        if (barcodeScannerOptions?.instructionText!!.isNotEmpty()) {
+        if (barcodeScannerOptions?.instructionText?.isNotEmpty() == true) {
             statusText.visibility = VISIBLE
             statusText.text = barcodeScannerOptions?.instructionText
         }

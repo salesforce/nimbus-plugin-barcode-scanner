@@ -10,5 +10,5 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle" >
     <solid android:color="@color/transparent" />
-    <stroke android:color="#148AED" android:width="4dp" />
+    <stroke android:color="@color/ring_color" android:width="4dp" />
 </shape>

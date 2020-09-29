@@ -6,7 +6,6 @@
   ~ For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
   ~
   -->
-
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">

@@ -10,7 +10,6 @@
 package com.salesforce.barcodescannerplugin
 
 import android.content.Context
-import android.webkit.WebView
 import android.widget.Toast
 import com.salesforce.barcodescannerplugin.events.*
 import com.salesforce.nimbus.*
@@ -35,7 +34,15 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
         options: BarcodeScannerOptions?,
         callback: (barcode: BarcodeScannerResult?, failure: BarcodeScannerFailure?) -> Unit
     ) {
-        barcodeOptions = options ?: BarcodeScannerOptions(listOf())
+        // make sure have options and support all barcode types if not specified by client
+        barcodeOptions = options ?: BarcodeScannerOptions()
+        if (barcodeOptions?.barcodeTypes.isEmpty()) {
+            barcodeOptions = BarcodeScannerOptions(
+                BarcodeType.values().asList(),
+                barcodeOptions.instructionText,
+                barcodeOptions.successText)
+        }
+
         scannerCallback = callback
         startScanner()
     }
@@ -85,8 +92,10 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
         }
     }
 
-    override fun cleanup(webView: WebView, bridge: Bridge) = unRegisterEventBus()
-
+    override fun <JavascriptEngine, EncodedType> cleanup(runtime: Runtime<JavascriptEngine, EncodedType>) {
+        super.cleanup(runtime)
+        unRegisterEventBus()
+    }
 
     /**
      * launch the BarcodePluginActivity to do the scanning
