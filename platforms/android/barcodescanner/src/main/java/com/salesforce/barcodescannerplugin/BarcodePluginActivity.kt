@@ -14,11 +14,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
-import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.ImageProxy
@@ -36,13 +33,6 @@ import org.greenrobot.eventbus.Subscribe
 
 class BarcodePluginActivity : AppCompatActivity() {
 
-    private lateinit var viewFinder: BarcodeScannerPreviewView
-    private lateinit var statusText: TextView
-    private lateinit var scanningIndicator: View
-    private lateinit var scanSuccessIndicator: View
-    private lateinit var focusBox: View
-    private lateinit var frozenFrame: ImageView
-    private lateinit var frozenFrameWrapper: ViewGroup
     private val eventBus = EventBus.getDefault()
     private lateinit var mainHandler: Handler
     private var barcodeScannerOptions: BarcodeScannerOptions? = null
@@ -69,14 +59,7 @@ class BarcodePluginActivity : AppCompatActivity() {
         setContentView(R.layout.barcode_plugin_activity)
 
         mainHandler = Handler(Looper.getMainLooper())
-        viewFinder = findViewById(R.id.preview_view)
-        statusText = findViewById(R.id.status_text)
-        scanningIndicator = findViewById(R.id.scanning_indicator)
-        scanSuccessIndicator = findViewById(R.id.scan_success_indicator)
-        frozenFrame = findViewById(R.id.frozen_frame)
-        frozenFrameWrapper = findViewById(R.id.frozen_frame_wrapper)
-        focusBox = findViewById(R.id.focus_box)
-        lifecycle.addObserver(viewFinder)
+        lifecycle.addObserver(preview_view)
 
         barcodeScannerOptions =
             intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
@@ -208,7 +191,7 @@ class BarcodePluginActivity : AppCompatActivity() {
     private fun startScan() {
         mainHandler.post {
             try {
-                viewFinder.startScan(this, barcodeAnalyzer)
+                preview_view.startScan(this, barcodeAnalyzer)
                 updateViewsForStartScan()
             } catch (exc: Exception) {
                 scanFailed(BarcodeScannerFailureCode.UNKNOWN_REASON, exc)
@@ -222,45 +205,48 @@ class BarcodePluginActivity : AppCompatActivity() {
     }
 
     private fun updateViewsForStartScan() {
-        if (barcodeScannerOptions?.instructionText?.isNotEmpty() == true) {
-            statusText.visibility = VISIBLE
-            statusText.text = barcodeScannerOptions?.instructionText
-        }
-        scanningIndicator.visibility = VISIBLE
-        scanSuccessIndicator.visibility = GONE
-        focusBox.isSelected = false
-        frozenFrameWrapper.visibility = GONE
+        updateTextViewWithVisibilityCheck(status_text, barcodeScannerOptions?.instructionText)
+        scanning_indicator.visibility = VISIBLE
+        scan_success_indicator.visibility = GONE
+        focus_box.isSelected = false
+        frozen_frame_wrapper.visibility = GONE
     }
 
     private fun updateViewsForScanSuccess(barcode: FirebaseVisionBarcode, image: ImageProxy) {
-        if (barcodeScannerOptions?.successText!!.isNotEmpty()) {
-            statusText.text = barcodeScannerOptions!!.successText
-            statusText.visibility = VISIBLE
-        } else {
-            statusText.visibility = GONE
-        }
-
-        scanningIndicator.visibility = GONE
-        scanSuccessIndicator.visibility = VISIBLE
-        focusBox.isSelected = true
+        updateTextViewWithVisibilityCheck(status_text, barcodeScannerOptions?.successText)
+        scanning_indicator.visibility = GONE
+        scan_success_indicator.visibility = VISIBLE
+        focus_box.isSelected = true
 
         val previewBitmap = Utils.convertImageToBitmap(image)
-        frozenFrame.setImageBitmap(previewBitmap)
-        frozenFrameWrapper.visibility = VISIBLE
+        frozen_frame.setImageBitmap(previewBitmap)
+        frozen_frame_wrapper.visibility = VISIBLE
 
 
         barcode.boundingBox?.apply {
             // resize the barcode region indicator and move to where th`e barcode is
-            val bounds = this.scaleRectBy(getPreviewToImageXRation(image), getPreviewToImageYRation(image))
+            val bounds =
+                this.scaleRectBy(getPreviewToImageXRation(image), getPreviewToImageYRation(image))
 
-            val focusBoxCenterX = focusBox.left + focusBox.width/2
-            val focusBoxCenterY = focusBox.top + focusBox.height/2
+            val focusBoxCenterX = focus_box.left + focus_box.width / 2
+            val focusBoxCenterY = focus_box.top + focus_box.height / 2
 
-            val barcodeCenterX = (bounds.left + bounds.right)/2
-            val barcodeCenterY = (bounds.top + bounds.bottom)/2
+            val barcodeCenterX = (bounds.left + bounds.right) / 2
+            val barcodeCenterY = (bounds.top + bounds.bottom) / 2
 
-            frozenFrame.translationX = (focusBoxCenterX - barcodeCenterX).toFloat()
-            frozenFrame.translationY = (focusBoxCenterY - barcodeCenterY).toFloat()
+            frozen_frame.apply {
+                translationX = (focusBoxCenterX - barcodeCenterX).toFloat()
+                translationY = (focusBoxCenterY - barcodeCenterY).toFloat()
+            }
+        }
+    }
+
+    private fun updateTextViewWithVisibilityCheck(view: TextView, text: String?) {
+        if (text?.isNotEmpty() == true) {
+            view.visibility = VISIBLE
+            view.text = text
+        } else {
+            view.visibility = GONE
         }
     }
 
@@ -270,7 +256,7 @@ class BarcodePluginActivity : AppCompatActivity() {
     private fun getPreviewToImageXRation(image: ImageProxy): Float {
         val width =
             if (image.imageInfo.rotationDegrees == 0 || image.imageInfo.rotationDegrees == 270) image.width else image.height
-        return viewFinder.width.toFloat() / width
+        return preview_view.width.toFloat() / width
     }
 
     /**
@@ -279,16 +265,14 @@ class BarcodePluginActivity : AppCompatActivity() {
     private fun getPreviewToImageYRation(image: ImageProxy): Float {
         val height =
             if (image.imageInfo.rotationDegrees == 0 || image.imageInfo.rotationDegrees == 270) image.height else image.width
-        return viewFinder.height.toFloat() / height
+        return preview_view.height.toFloat() / height
     }
-
 
     companion object {
         private const val OPTIONS_VALUE = "OptionsValue"
         private const val SUCCESSFUL_SCAN_PROCESS_TIME_THRESHOLD_IN_MS = 1000L
         private const val FIREBASE_ML_LOADING_TIME_THRESHOLD_IN_MS = 1000L
         private const val ARTIFICIAL_PAUSE_IN_MS = 500L
-        private const val STATE_KEY_SCAN_STARTED = "ScanStarted"
 
         /**
          * create the intent for launch BarcodePluginActivity, set intent flag to SINGLE_TOP to only allow one BarcodePluginActivity

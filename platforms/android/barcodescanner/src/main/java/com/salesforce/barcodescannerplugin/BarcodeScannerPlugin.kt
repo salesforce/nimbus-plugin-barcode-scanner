@@ -34,15 +34,7 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
         options: BarcodeScannerOptions?,
         callback: (barcode: BarcodeScannerResult?, failure: BarcodeScannerFailure?) -> Unit
     ) {
-        // make sure have options and support all barcode types if not specified by client
         barcodeOptions = options ?: BarcodeScannerOptions()
-        if (barcodeOptions?.barcodeTypes.isEmpty()) {
-            barcodeOptions = BarcodeScannerOptions(
-                BarcodeType.values().asList(),
-                barcodeOptions.instructionText,
-                barcodeOptions.successText)
-        }
-
         scannerCallback = callback
         startScanner()
     }

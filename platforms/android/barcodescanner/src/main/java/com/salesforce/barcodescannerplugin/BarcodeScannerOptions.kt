@@ -20,7 +20,15 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 class BarcodeScannerOptions(
-    val barcodeTypes: List<BarcodeType> = BarcodeType.values().asList(),
+    val barcodeTypes: MutableList<BarcodeType> = mutableListOf(),
     val instructionText: String? = null,
     val successText: String? = null
-) : java.io.Serializable
+) : java.io.Serializable {
+
+    init {
+        // make sure have options and support all barcode types if not specified by client
+        if (barcodeTypes.isEmpty()) {
+            barcodeTypes.addAll(BarcodeType.values().asList())
+        }
+    }
+}

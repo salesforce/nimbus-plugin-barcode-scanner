@@ -25,7 +25,7 @@ class BarcodeScannerResultTests {
     @Test
     fun `stringify returns type and value`() {
         assertEquals(
-            """{"type":"UPCE","value":"SimpleCode"}""",
+            """{"type":"upce","value":"SimpleCode"}""",
             json.stringify(BarcodeScannerResult(UPCE, "SimpleCode"))
         )
     }
@@ -33,7 +33,7 @@ class BarcodeScannerResultTests {
     @Test
     fun `stringify returns can handle xml QR code`() {
         assertEquals(
-            """{"type":"QR","value":"<a href=\"#\">text<\/a>"}""",
+            """{"type":"qr","value":"<a href=\"#\">text</a>"}""",
             json.stringify(BarcodeScannerResult(QR, """<a href="#">text</a>"""))
         )
     }
@@ -41,7 +41,7 @@ class BarcodeScannerResultTests {
     @Test
     fun `stringify returns can handle json QR code`() {
         assertEquals(
-            """{"type":"QR","value":"{\"a\":1,\"b\":{\"c\":true}}}"}""",
+            """{"type":"qr","value":"{\"a\":1,\"b\":{\"c\":true}}}"}""",
             json.stringify(BarcodeScannerResult(QR, """{"a":1,"b":{"c":true}}}"""))
         )
     }

@@ -13,10 +13,8 @@ import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.parse
+import org.junit.Assert.*
 import org.junit.Test
-
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 
 @ImplicitReflectionSerializer
 class BarcodeScannerOptionsTests {
@@ -54,18 +52,16 @@ class BarcodeScannerOptionsTests {
     @Test
     fun `passing no barcode types defaults to empty list`() {
         val barcodeScannerOptions = BarcodeScannerOptions()
-        assert(barcodeScannerOptions.barcodeTypes.count() == 0)
+        assertEquals(BarcodeType.values().size, barcodeScannerOptions.barcodeTypes.count())
     }
 
     @Test
     fun `convert json to barcodeScannerOptions with empty barcode types`() {
         val originalOptions = """
-            {"barcodeTypes": 
-                []
-            }
+            {}
         """.trimIndent()
         val barcodeScannerOptions = json.parse<BarcodeScannerOptions>(originalOptions)
-        assertEquals(0, barcodeScannerOptions.barcodeTypes.count())
+        assertEquals(BarcodeType.values().size, barcodeScannerOptions.barcodeTypes.size)
     }
 
     @Test
@@ -77,7 +73,7 @@ class BarcodeScannerOptionsTests {
             }
         """
         )
-        assertEquals("", options.instructionText);
-        assertEquals("", options.successText);
+        assertNull(options.instructionText)
+        assertNull(options.successText)
     }
 }
