@@ -65,7 +65,7 @@ class BarcodeScannerOptionsTests {
     }
 
     @Test
-    fun `default instruction and success text as empty string`() {
+    fun `default instruction and success text to null`() {
         val options = json.parse<BarcodeScannerOptions>(
             """
             {"barcodeTypes": 
