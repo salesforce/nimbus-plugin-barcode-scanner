@@ -6,7 +6,6 @@
   ~ For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
   ~
   -->
-
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -18,7 +17,7 @@
         style="@style/Widget.AppCompat.Button.Borderless"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="start|center_vertical"
+        android:layout_gravity="end|center_vertical"
         android:layout_marginStart="@dimen/top_action_button_padding"
         android:contentDescription="@android:string/cancel"
         android:minWidth="?actionBarSize"

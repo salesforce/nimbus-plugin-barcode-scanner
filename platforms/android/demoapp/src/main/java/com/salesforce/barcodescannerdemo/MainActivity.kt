@@ -13,18 +13,23 @@ import android.os.Bundle
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
 import com.salesforce.barcodescannerplugin.BarcodeScannerPlugin
-import com.salesforce.barcodescannerplugin.BarcodeScannerPluginBinder
-import com.salesforce.nimbus.Bridge
-import com.salesforce.nimbus.plugins.DeviceInfoPlugin
-import com.salesforce.nimbus.plugins.DeviceInfoPluginBinder
-import com.salesforce.nimbusjs.NimbusJSUtilities
+import com.salesforce.barcodescannerplugin.webViewBinder
+import com.salesforce.nimbus.BoundPlugin
+import com.salesforce.nimbus.NimbusJSUtilities
+import com.salesforce.nimbus.bridge.webview.WebViewBridge
+import com.salesforce.nimbus.bridge.webview.bridge
+import com.salesforce.nimbus.core.plugins.DeviceInfoPlugin
 import kotlinx.android.synthetic.main.activity_main.plugin_webview
 import java.nio.charset.StandardCharsets
 
 class MainActivity : AppCompatActivity() {
 
+    @BoundPlugin
     private lateinit var barcodeScannerPlugin: BarcodeScannerPlugin
-    private val nimbusBridge = Bridge()
+    @BoundPlugin
+    private lateinit var deviceInfoPlugin: DeviceInfoPlugin
+
+    private lateinit var webViewBridge: WebViewBridge
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,16 +41,17 @@ class MainActivity : AppCompatActivity() {
 
         // register the plugins with the webview in the nimbus bridge
         barcodeScannerPlugin = BarcodeScannerPlugin(this)
-        nimbusBridge.add(BarcodeScannerPluginBinder(barcodeScannerPlugin))
+        deviceInfoPlugin = DeviceInfoPlugin(this)
 
-        nimbusBridge.add(DeviceInfoPluginBinder(DeviceInfoPlugin(this)))
-
-        nimbusBridge.attach(plugin_webview)
+        webViewBridge = plugin_webview.bridge {
+            bind { deviceInfoPlugin.webViewBinder() }
+            bind { barcodeScannerPlugin.webViewBinder() }
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        nimbusBridge.detach()
+        webViewBridge.detach()
     }
 
     private fun initializeDemoWebViewHtmlContent() {

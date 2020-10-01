@@ -65,7 +65,9 @@ function startScanning(continuous) {
     continuousScan = continuous;
     if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
         barcodeScanner.beginCapture(
-            {"barcodeTypes": ["code128", "code39", "code93", "ean13", "ean8", "upce", "upca", "qr"]},
+            {"barcodeTypes": ["code128", "code39", "code93", "ean13", "ean8", "upce", "upca", "qr"],
+            "instructionText":"Position barcode in the scanner view",
+            "successText":"Success!"},
             barcodeScannerCallback
         );
     }

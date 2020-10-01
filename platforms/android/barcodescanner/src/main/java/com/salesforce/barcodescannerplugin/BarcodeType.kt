@@ -10,19 +10,45 @@
 package com.salesforce.barcodescannerplugin
 
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class BarcodeType {
+    @SerialName("code128")
     CODE128,
-    CODE93,
+
+    @SerialName("code39")
     CODE39,
+
+    @SerialName("code93")
+    CODE93,
+
+    @SerialName("datamatrix")
     DATAMATRIX,
+
+    @SerialName("ean13")
     EAN13,
+
+    @SerialName("ean8")
     EAN8,
+
+    @SerialName("itf")
     ITF,
+
+    @SerialName("upca")
     UPCA,
+
+    @SerialName("upce")
     UPCE,
+
+    @SerialName("pdf417")
     PDF417,
+
+    @SerialName("qr")
     QR,
+
+    @SerialName("unknown")
     UNKNOWN;
 
     fun toVisionBarcodeType() =

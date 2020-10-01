@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit
  */
 class BarcodeAnalyzer(
     private val activity: AppCompatActivity,
-    private val onBarcodeDetected: (List<FirebaseVisionBarcode>) -> Unit,
+    private val onBarcodeDetected: (List<FirebaseVisionBarcode>, ImageProxy) -> Unit,
     private val onBarcodeDetectFailed: (Exception) -> Unit,
     private val barcodeScannerOptions: BarcodeScannerOptions? = null
 ) : ImageAnalysis.Analyzer, LifecycleEventObserver {
@@ -45,8 +45,8 @@ class BarcodeAnalyzer(
     }
 
     var isPaused: Boolean = false
-
     private var lastAnalyzedTimestamp = 0L
+
     private val detector: FirebaseVisionBarcodeDetector by lazy {
         if (barcodeScannerOptions == null) {
             FirebaseVision.getInstance().visionBarcodeDetector
@@ -98,7 +98,7 @@ class BarcodeAnalyzer(
             detector.detectInImage(firebaseImage)
                 .addOnSuccessListener(activity) {
                     // call callback if not paused
-                    if (!isPaused) onBarcodeDetected(it)
+                    if (!isPaused) onBarcodeDetected(it, image)
                     closeImageProxy(image)
                 }
                 .addOnFailureListener(activity) {

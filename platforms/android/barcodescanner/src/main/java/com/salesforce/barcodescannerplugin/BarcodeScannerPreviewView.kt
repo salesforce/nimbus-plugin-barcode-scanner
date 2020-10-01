@@ -49,6 +49,8 @@ class BarcodeScannerPreviewView @JvmOverloads constructor(
 
         val screenAspectRatio = getAspectRation(metrics.widthPixels, metrics.heightPixels)
 
+        implementationMode = ImplementationMode.COMPATIBLE
+
         cameraProviderFuture = ProcessCameraProvider.getInstance(context).apply {
             addListener(Runnable {
                 val cameraProvider = cameraProviderFuture.get()
@@ -59,8 +61,7 @@ class BarcodeScannerPreviewView @JvmOverloads constructor(
                     setTargetRotation(rotation)
                 }.build()
 
-                preferredImplementationMode = ImplementationMode.TEXTURE_VIEW
-                preview?.setSurfaceProvider(createSurfaceProvider(camera?.cameraInfo))
+                preview?.setSurfaceProvider(surfaceProvider)
 
                 // Image Analysis
                 imageAnalysis = ImageAnalysis.Builder()
@@ -112,7 +113,7 @@ class BarcodeScannerPreviewView @JvmOverloads constructor(
             if (camera != null && event.action == MotionEvent.ACTION_DOWN) {
                 camera?.cameraControl?.startFocusAndMetering(
                     FocusMeteringAction.Builder(
-                        createMeteringPointFactory(cameraSelector).createPoint(
+                        meteringPointFactory.createPoint(
                             event.x,
                             event.y
                         )

@@ -9,29 +9,26 @@
 
 package com.salesforce.barcodescannerplugin
 
-import org.json.JSONObject
-import java.io.Serializable
-import java.lang.Exception
+import kotlinx.serialization.Serializable
 
-class BarcodeScannerOptions(val barcodeTypes: List<BarcodeType> = listOf()) : Serializable {
-    companion object {
-        @JvmStatic
-        fun fromJSON(barcodeScannerOptions: String): BarcodeScannerOptions {
-            return try {
-                val options = JSONObject(barcodeScannerOptions)
-                val barcodeTypes = options.getJSONArray("barcodeTypes")
-                var convertedTypes = mutableListOf<BarcodeType>()
-                if (barcodeTypes.length() > 0) {
-                    for (i in 0 until barcodeTypes.length()) {
-                        convertedTypes.add(BarcodeType.valueOf(barcodeTypes.getString(i).toUpperCase()))
-                    }
-                } else {
-                    convertedTypes = enumValues<BarcodeType>().toMutableList()
-                }
-                BarcodeScannerOptions(convertedTypes)
-            } catch (e: Exception) {
-                BarcodeScannerOptions()
-            }
+/**
+ * the barcode scanner options
+ *
+ * @Serializable to make json Serializable for kotlin
+ * extends Serializable to make it could be passed as activity bundle
+ * without extra code
+ */
+@Serializable
+class BarcodeScannerOptions(
+    val barcodeTypes: MutableList<BarcodeType> = mutableListOf(),
+    val instructionText: String? = null,
+    val successText: String? = null
+) : java.io.Serializable {
+
+    init {
+        // make sure have options and support all barcode types if not specified by client
+        if (barcodeTypes.isEmpty()) {
+            barcodeTypes.addAll(BarcodeType.values().asList())
         }
     }
 }

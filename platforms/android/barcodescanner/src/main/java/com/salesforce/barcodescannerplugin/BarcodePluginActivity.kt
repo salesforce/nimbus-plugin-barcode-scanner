@@ -14,10 +14,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.PersistableBundle
-import android.util.Log
-import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.ImageProxy
 import androidx.lifecycle.Lifecycle
 import com.google.firebase.ml.common.FirebaseMLException
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
@@ -32,9 +33,9 @@ import org.greenrobot.eventbus.Subscribe
 
 class BarcodePluginActivity : AppCompatActivity() {
 
-    private lateinit var viewFinder: BarcodeScannerPreviewView
     private val eventBus = EventBus.getDefault()
     private lateinit var mainHandler: Handler
+    private var barcodeScannerOptions: BarcodeScannerOptions? = null
     private lateinit var barcodeAnalyzer: BarcodeAnalyzer
 
     /** if successful scan event is not processed timely, mostly the bridge between the plugin and
@@ -47,10 +48,10 @@ class BarcodePluginActivity : AppCompatActivity() {
     }
 
     /**
-     *
+     * runnable to hide the ml loading indicator
      */
     private val hideLoadingIndicatorRunnable = Runnable {
-        firebase_ml_loading_indicator.visibility = View.GONE
+        firebase_ml_loading_indicator.visibility = GONE
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,23 +59,24 @@ class BarcodePluginActivity : AppCompatActivity() {
         setContentView(R.layout.barcode_plugin_activity)
 
         mainHandler = Handler(Looper.getMainLooper())
-        viewFinder = findViewById(R.id.preview_view)
-        lifecycle.addObserver(viewFinder)
+        lifecycle.addObserver(preview_view)
 
+        barcodeScannerOptions =
+            intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
         barcodeAnalyzer = BarcodeAnalyzer(
             this,
-            { qrCodes ->
-                firebase_ml_loading_indicator.visibility = View.GONE
+            { qrCodes, image ->
+                firebase_ml_loading_indicator.visibility = GONE
                 if (qrCodes.isNotEmpty()) {
                     barcodeAnalyzer.isPaused = true
                     val barcode = qrCodes.first()
-                    onBarcodeFound(barcode)
+                    onBarcodeFound(barcode, image)
                 }
             },
             {
                 onBarcodeDetectFailed(it)
             },
-            intent.extras?.getSerializable(OPTIONS_VALUE) as BarcodeScannerOptions?
+            barcodeScannerOptions
         )
 
         close_button.setOnClickListener {
@@ -98,7 +100,7 @@ class BarcodePluginActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        barcodeAnalyzer?.isPaused = false
+        barcodeAnalyzer.isPaused = false
     }
 
     override fun onDestroy() {
@@ -142,22 +144,25 @@ class BarcodePluginActivity : AppCompatActivity() {
     @Subscribe
     fun onMessage(event: StopScanEvent) = finish()
 
-    private fun onBarcodeFound(barcode: FirebaseVisionBarcode) {
+    private fun onBarcodeFound(barcode: FirebaseVisionBarcode, image: ImageProxy) {
         // only notify SuccessfulScan when activity is resumed
         if (lifecycle.currentState == Lifecycle.State.RESUMED) {
-            eventBus.postSticky(
-                SuccessfulScanEvent(
-                    BarcodeScannerResult(
-                        BarcodeType.fromVisionBarcode(barcode.format),
-                        barcode.displayValue ?: ""
+            updateViewsForScanSuccess(barcode, image)
+            mainHandler.postDelayed({
+                eventBus.postSticky(
+                    SuccessfulScanEvent(
+                        BarcodeScannerResult(
+                            BarcodeType.fromVisionBarcode(barcode.format),
+                            barcode.displayValue ?: ""
+                        )
                     )
                 )
-            )
-            // check the successful scan to be consumed timely
-            mainHandler.postDelayed(
-                eventMessageDeliveryCheckRunnable,
-                SUCCESSFUL_SCAN_PROCESS_TIME_THRESHOLD_IN_MS
-            )
+                // check the successful scan to be consumed timely
+                mainHandler.postDelayed(
+                    eventMessageDeliveryCheckRunnable,
+                    SUCCESSFUL_SCAN_PROCESS_TIME_THRESHOLD_IN_MS
+                )
+            }, ARTIFICIAL_PAUSE_IN_MS)
         }
     }
 
@@ -169,7 +174,7 @@ class BarcodePluginActivity : AppCompatActivity() {
             exception.message != null &&
             exception.message!!.contains("Please wait")
         ) {
-            firebase_ml_loading_indicator.visibility = View.VISIBLE
+            firebase_ml_loading_indicator.visibility = VISIBLE
             mainHandler.apply {
                 removeCallbacks(hideLoadingIndicatorRunnable)
                 postDelayed(
@@ -178,7 +183,7 @@ class BarcodePluginActivity : AppCompatActivity() {
                 )
             }
         } else {
-            firebase_ml_loading_indicator.visibility = View.GONE
+            firebase_ml_loading_indicator.visibility = GONE
             scanFailed(BarcodeScannerFailureCode.UNKNOWN_REASON, exception)
         }
     }
@@ -186,7 +191,8 @@ class BarcodePluginActivity : AppCompatActivity() {
     private fun startScan() {
         mainHandler.post {
             try {
-                viewFinder.startScan(this, barcodeAnalyzer)
+                preview_view.startScan(this, barcodeAnalyzer)
+                updateViewsForStartScan()
             } catch (exc: Exception) {
                 scanFailed(BarcodeScannerFailureCode.UNKNOWN_REASON, exc)
             }
@@ -198,11 +204,75 @@ class BarcodePluginActivity : AppCompatActivity() {
         eventBus.postSticky(FailedScanEvent(code, exception))
     }
 
+    private fun updateViewsForStartScan() {
+        updateTextViewWithVisibilityCheck(status_text, barcodeScannerOptions?.instructionText)
+        scanning_indicator.visibility = VISIBLE
+        scan_success_indicator.visibility = GONE
+        focus_box.isSelected = false
+        frozen_frame_wrapper.visibility = GONE
+    }
+
+    private fun updateViewsForScanSuccess(barcode: FirebaseVisionBarcode, image: ImageProxy) {
+        updateTextViewWithVisibilityCheck(status_text, barcodeScannerOptions?.successText)
+        scanning_indicator.visibility = GONE
+        scan_success_indicator.visibility = VISIBLE
+        focus_box.isSelected = true
+
+        val previewBitmap = Utils.convertImageToBitmap(image)
+        frozen_frame.setImageBitmap(previewBitmap)
+        frozen_frame_wrapper.visibility = VISIBLE
+
+
+        barcode.boundingBox?.apply {
+            // resize the barcode region indicator and move to where th`e barcode is
+            val bounds =
+                this.scaleRectBy(getPreviewToImageXRation(image), getPreviewToImageYRation(image))
+
+            val focusBoxCenterX = focus_box.left + focus_box.width / 2
+            val focusBoxCenterY = focus_box.top + focus_box.height / 2
+
+            val barcodeCenterX = (bounds.left + bounds.right) / 2
+            val barcodeCenterY = (bounds.top + bounds.bottom) / 2
+
+            frozen_frame.apply {
+                translationX = (focusBoxCenterX - barcodeCenterX).toFloat()
+                translationY = (focusBoxCenterY - barcodeCenterY).toFloat()
+            }
+        }
+    }
+
+    private fun updateTextViewWithVisibilityCheck(view: TextView, text: String?) {
+        if (text?.isNotEmpty() == true) {
+            view.visibility = VISIBLE
+            view.text = text
+        } else {
+            view.visibility = GONE
+        }
+    }
+
+    /**
+     * the camera in phone is landscape and this activity is locked in portrait, so the width of activity view is the height of camera image for 0 or 270 rotation
+     */
+    private fun getPreviewToImageXRation(image: ImageProxy): Float {
+        val width =
+            if (image.imageInfo.rotationDegrees == 0 || image.imageInfo.rotationDegrees == 270) image.width else image.height
+        return preview_view.width.toFloat() / width
+    }
+
+    /**
+     * the camera in phone is landscape and this activity is locked in portrait, so the height of activity view is the width of camera image for 0 or 270 rotation
+     */
+    private fun getPreviewToImageYRation(image: ImageProxy): Float {
+        val height =
+            if (image.imageInfo.rotationDegrees == 0 || image.imageInfo.rotationDegrees == 270) image.height else image.width
+        return preview_view.height.toFloat() / height
+    }
+
     companion object {
         private const val OPTIONS_VALUE = "OptionsValue"
         private const val SUCCESSFUL_SCAN_PROCESS_TIME_THRESHOLD_IN_MS = 1000L
         private const val FIREBASE_ML_LOADING_TIME_THRESHOLD_IN_MS = 1000L
-        private const val STATE_KEY_SCAN_STARTED = "ScanStarted"
+        private const val ARTIFICIAL_PAUSE_IN_MS = 500L
 
         /**
          * create the intent for launch BarcodePluginActivity, set intent flag to SINGLE_TOP to only allow one BarcodePluginActivity
