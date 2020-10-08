@@ -11,13 +11,15 @@ package com.salesforce.barcodescannerplugin
 
 import android.app.Activity
 import android.content.pm.PackageManager
-import android.graphics.*
-import android.util.Log
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageFormat
+import android.graphics.Matrix
+import android.graphics.Rect
+import android.graphics.YuvImage
 import androidx.camera.core.ImageProxy
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
-import com.salesforce.barcodescannerplugin.events.FailedScanEvent
-import org.greenrobot.eventbus.EventBus
 import java.io.ByteArrayOutputStream
 
 /** Utility class to provide helper methods.  */
@@ -47,7 +49,7 @@ object Utils {
 
         val nv21 = ByteArray(ySize + uSize + vSize)
 
-        //U and V are swapped
+        // U and V are swapped
         yBuffer.get(nv21, 0, ySize)
         vBuffer.get(nv21, ySize, vSize)
         uBuffer.get(nv21, ySize + vSize, uSize)
@@ -67,7 +69,6 @@ object Utils {
             true
         )
     }
-
 }
 
 fun Rect.extendRectBy(by: Int) =
@@ -79,5 +80,3 @@ fun Rect.scaleRectBy(xRation: Float, yRation: Float) = Rect(
     (this.right * xRation).toInt(),
     (this.bottom * yRation).toInt()
 )
-
-

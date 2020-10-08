@@ -82,10 +82,8 @@ class BarcodeScannerFocusIndicatorView @JvmOverloads constructor(
                 )
                 close()
             }, veilPaint)
-
         }
     }
-
 
     private fun getArchBounds(centerX: Float, centerY: Float, radius: Float) =
         RectF(

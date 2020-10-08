@@ -17,4 +17,4 @@ import java.lang.Exception
  *
  * @param errorCode error code for the failed scan
  */
-class FailedScanEvent(val errorCode: BarcodeScannerFailureCode, val exception: Exception?=null)
+class FailedScanEvent(val errorCode: BarcodeScannerFailureCode, val exception: Exception? = null)

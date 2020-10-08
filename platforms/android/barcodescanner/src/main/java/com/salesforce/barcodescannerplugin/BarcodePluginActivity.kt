@@ -222,7 +222,6 @@ class BarcodePluginActivity : AppCompatActivity() {
         frozen_frame.setImageBitmap(previewBitmap)
         frozen_frame_wrapper.visibility = VISIBLE
 
-
         barcode.boundingBox?.apply {
             // resize the barcode region indicator and move to where th`e barcode is
             val bounds =
