@@ -11,8 +11,14 @@ package com.salesforce.barcodescannerplugin
 
 import android.content.Context
 import android.widget.Toast
-import com.salesforce.barcodescannerplugin.events.*
-import com.salesforce.nimbus.*
+import com.salesforce.barcodescannerplugin.events.FailedScanEvent
+import com.salesforce.barcodescannerplugin.events.ScanStartedEvent
+import com.salesforce.barcodescannerplugin.events.StopScanEvent
+import com.salesforce.barcodescannerplugin.events.SuccessfulScanEvent
+import com.salesforce.nimbus.BoundMethod
+import com.salesforce.nimbus.Plugin
+import com.salesforce.nimbus.PluginOptions
+import com.salesforce.nimbus.Runtime
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -114,5 +120,4 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
         Toast.makeText(context, R.string.bridge_broken_message, Toast.LENGTH_LONG).show()
         eventBus.post(StopScanEvent())
     }
-
 }

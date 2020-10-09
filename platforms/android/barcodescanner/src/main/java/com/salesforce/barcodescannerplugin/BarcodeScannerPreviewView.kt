@@ -5,13 +5,18 @@ import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
-import androidx.camera.core.*
-import androidx.camera.core.CameraSelector.*
+import androidx.camera.core.AspectRatio
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.CameraSelector.LENS_FACING_BACK
+import androidx.camera.core.FocusMeteringAction
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.Lifecycle.Event.*
+import androidx.lifecycle.Lifecycle.Event.ON_DESTROY
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
@@ -33,7 +38,7 @@ class BarcodeScannerPreviewView @JvmOverloads constructor(
     private var camera: Camera? = null
     private var imageAnalysis: ImageAnalysis? = null
 
-    private val cameraSelector = Builder().requireLensFacing(LENS_FACING_BACK).build()
+    private val cameraSelector = CameraSelector.Builder().requireLensFacing(LENS_FACING_BACK).build()
 
     /**
      *  start barcode scanning
