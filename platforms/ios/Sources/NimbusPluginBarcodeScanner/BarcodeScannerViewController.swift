@@ -27,14 +27,13 @@ public class BarcodeScannerViewController: UIViewController {
         self.instructionText = instructionText
         self.successText = successText
         self.statusBar = ScannerStatusBar(instructionText: instructionText)
-        let xImage = UIImage.sldsActionIcon(.remove, with: .white, andBGColor: .clear, andSize: 45.0)
+        let xImage = UIImage.sldsIconAction(.remove, with: .white, andBGColor: .clear, andSize: 45)
         closeButton = UIButton(type: .custom)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.setBackgroundImage(xImage, for: .normal)
         closeButton.sizeToFit()
         closeButton.accessibilityLabel = "Close"
-        let checkImage = UIImage.sldsActionIcon(.check
-        , with: .white, andBGColor: UIColor(red: 0.02, green: 0.52, blue: 0.29, alpha: 1.00), andSize: 55.0)
+        let checkImage = UIImage.sldsIconAction(.check, with: .white, andBGColor: UIColor(red: 0.02, green: 0.52, blue: 0.29, alpha: 1.00), andSize: 55)
         successIcon = UIImageView(image: checkImage)
         successIcon.translatesAutoresizingMaskIntoConstraints = false
         successIcon.sizeToFit()

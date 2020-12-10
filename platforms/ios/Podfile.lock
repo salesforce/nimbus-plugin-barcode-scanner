@@ -1,25 +1,25 @@
 PODS:
-  - DesignSystem (3.1.2)
-  - NimbusBridge (2.0.0-beta1)
+  - DesignSystem (2.0.8)
+  - NimbusBridge (2.0.1)
   - SnapshotTesting (1.8.1)
 
 DEPENDENCIES:
-  - DesignSystem (~> 3.1)
+  - DesignSystem (~> 2.0)
+  - NimbusBridge (~> 2.0)
   - NimbusBridge (~> 2.0.0-beta1)
   - SnapshotTesting (~> 1.8.1)
 
 SPEC REPOS:
-  https://git.soma.salesforce.com/MobilePlatform/CocoaPods-Specs.git:
-    - NimbusBridge
   https://github.com/CocoaPods/Specs.git:
     - DesignSystem
+    - NimbusBridge
     - SnapshotTesting
 
 SPEC CHECKSUMS:
-  DesignSystem: 4ddd41c78164bba388856a8345509784ecb42a5f
-  NimbusBridge: fedc90480569f4f768a4ddb4139102f27310d9df
+  DesignSystem: 0777e9c9eec974d02334461735c6d95552341b59
+  NimbusBridge: 14c53c17394716c5a3b63b028c8e61a8f72389e8
   SnapshotTesting: 0bf562bd74d3e9d053cd8f1123bd7b8913304df4
 
-PODFILE CHECKSUM: c4c0e9dd560b4884144f417a69ed72d7f8f10c15
+PODFILE CHECKSUM: 649be7402acbc632481d55b931a99ac91247d0e4
 
 COCOAPODS: 1.8.4
