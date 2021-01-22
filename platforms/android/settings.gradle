@@ -9,3 +9,13 @@
 
 include ':demoapp', ':barcodescanner'
 rootProject.name='Nimbus Barcode Scanner Plugin'
+
+// Load Nimbus from Sources
+/*
+if (file("../../../nimbus").exists()) {
+    logger.lifecycle("Detected local nimbus, building from source.")
+    includeBuild("../../../nimbus")
+}
+*/
+
+

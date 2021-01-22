@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
 android {
@@ -31,7 +30,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
     implementation("org.jetbrains.kotlin:kotlin-serialization:$kotlin_version")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinx_serialization")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinx_serialization")
 
     implementation("androidx.appcompat:appcompat:$appcompat_version")
     implementation("androidx.constraintlayout:constraintlayout:$constraintlayout_version")
