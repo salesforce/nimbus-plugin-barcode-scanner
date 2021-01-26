@@ -6,14 +6,13 @@
   ~ For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
   ~
   -->
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".BarcodePluginActivity">
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".BarcodePluginActivity">
 
         <com.salesforce.barcodescannerplugin.BarcodeScannerPreviewView
             android:id="@+id/preview_view"
@@ -151,9 +150,9 @@
             tools:visibility="visible" />
 
         <include
+            android:id="@+id/top_action_bar"
             layout="@layout/top_action_bar_in_live_camera"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="top" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-</layout>
