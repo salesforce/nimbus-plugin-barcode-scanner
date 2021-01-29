@@ -9,18 +9,15 @@
 
 package com.salesforce.barcodescannerplugin
 
-import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.parse
+import kotlinx.serialization.decodeFromString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-@ImplicitReflectionSerializer
 class BarcodeScannerOptionsTests {
-    private val json = Json(JsonConfiguration(encodeDefaults = false))
+    private val json =  Json { encodeDefaults = false }
 
     @Test
     fun `convert json to barcodeScannerOptions`() {
@@ -31,7 +28,7 @@ class BarcodeScannerOptionsTests {
              "successText": "found a barcode"
             }
         """.trimIndent()
-        val options = json.parse<BarcodeScannerOptions>(originalOptions)
+        val options = json.decodeFromString<BarcodeScannerOptions>(originalOptions)
         assertEquals(
             listOf(
                 BarcodeType.CODE128,
@@ -47,7 +44,7 @@ class BarcodeScannerOptionsTests {
 
     @Test
     fun `null json to barcodeScannerOptions`() {
-        val convertedType = json.parse<BarcodeScannerOptions>("{}")
+        val convertedType = json.decodeFromString<BarcodeScannerOptions>("{}")
         assertNotNull(convertedType)
     }
 
@@ -62,13 +59,13 @@ class BarcodeScannerOptionsTests {
         val originalOptions = """
             {}
         """.trimIndent()
-        val barcodeScannerOptions = json.parse<BarcodeScannerOptions>(originalOptions)
+        val barcodeScannerOptions = json.decodeFromString<BarcodeScannerOptions>(originalOptions)
         assertEquals(BarcodeType.values().size, barcodeScannerOptions.barcodeTypes.size)
     }
 
     @Test
     fun `default instruction and success text to null`() {
-        val options = json.parse<BarcodeScannerOptions>(
+        val options = json.decodeFromString<BarcodeScannerOptions>(
             """
             {"barcodeTypes": 
                 []

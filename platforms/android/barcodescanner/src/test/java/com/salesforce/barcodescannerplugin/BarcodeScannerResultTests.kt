@@ -11,22 +11,19 @@ package com.salesforce.barcodescannerplugin
 
 import com.salesforce.barcodescannerplugin.BarcodeType.QR
 import com.salesforce.barcodescannerplugin.BarcodeType.UPCE
-import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.stringify
+import kotlinx.serialization.encodeToString
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-@ImplicitReflectionSerializer
 class BarcodeScannerResultTests {
-    private val json = Json(JsonConfiguration(encodeDefaults = false))
+    private val json =  Json { encodeDefaults = false }
 
     @Test
     fun `stringify returns type and value`() {
         assertEquals(
             """{"type":"upce","value":"SimpleCode"}""",
-            json.stringify(BarcodeScannerResult(UPCE, "SimpleCode"))
+            json.encodeToString(BarcodeScannerResult(UPCE, "SimpleCode"))
         )
     }
 
@@ -34,7 +31,7 @@ class BarcodeScannerResultTests {
     fun `stringify returns can handle xml QR code`() {
         assertEquals(
             """{"type":"qr","value":"<a href=\"#\">text</a>"}""",
-            json.stringify(BarcodeScannerResult(QR, """<a href="#">text</a>"""))
+            json.encodeToString(BarcodeScannerResult(QR, """<a href="#">text</a>"""))
         )
     }
 
@@ -42,7 +39,7 @@ class BarcodeScannerResultTests {
     fun `stringify returns can handle json QR code`() {
         assertEquals(
             """{"type":"qr","value":"{\"a\":1,\"b\":{\"c\":true}}}"}""",
-            json.stringify(BarcodeScannerResult(QR, """{"a":1,"b":{"c":true}}}"""))
+            json.encodeToString(BarcodeScannerResult(QR, """{"a":1,"b":{"c":true}}}"""))
         )
     }
 }
