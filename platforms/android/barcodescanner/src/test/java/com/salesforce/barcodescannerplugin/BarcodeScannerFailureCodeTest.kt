@@ -8,21 +8,18 @@
  */
 package com.salesforce.barcodescannerplugin
 
-import kotlinx.serialization.ImplicitReflectionSerializer
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.stringify
 import org.junit.Assert
 import org.junit.Test
 
 class BarcodeScannerFailureCodeTest {
 
-    private val json = Json(JsonConfiguration(encodeDefaults = false))
+    private val json =  Json { encodeDefaults = false }
 
-    @ImplicitReflectionSerializer
     @Test
     fun `serialize correctly`() {
-        val result = json.stringify(BarcodeScannerFailureCode.USER_DISMISSED_SCANNER)
+        val result = json.encodeToString(BarcodeScannerFailureCode.USER_DISMISSED_SCANNER)
         Assert.assertEquals("\"userDismissedScanner\"", result)
     }
 }

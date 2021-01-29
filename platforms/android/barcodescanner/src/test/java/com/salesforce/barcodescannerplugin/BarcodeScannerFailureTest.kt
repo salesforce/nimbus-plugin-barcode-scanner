@@ -8,28 +8,25 @@
  */
 package com.salesforce.barcodescannerplugin
 
-import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.stringify
+import kotlinx.serialization.encodeToString
 import org.junit.Assert
 import org.junit.Test
 import java.util.UUID
 
-@ImplicitReflectionSerializer
 class BarcodeScannerFailureTest {
-    private val json = Json(JsonConfiguration(encodeDefaults = false))
+    private val json =  Json { encodeDefaults = false }
 
     @Test
     fun `verify converting to json string`() {
-        val error = json.stringify(BarcodeScannerFailure(BarcodeScannerFailureCode.USER_DISMISSED_SCANNER))
+        val error = json.encodeToString(BarcodeScannerFailure(BarcodeScannerFailureCode.USER_DISMISSED_SCANNER))
         Assert.assertEquals("{\"code\":\"userDismissedScanner\"}", error)
     }
 
     @Test
     fun `verify converting to json string with message`() {
         val messageBody = UUID.randomUUID().toString()
-        val error = json.stringify(BarcodeScannerFailure(BarcodeScannerFailureCode.UNKNOWN_REASON, messageBody))
+        val error = json.encodeToString(BarcodeScannerFailure(BarcodeScannerFailureCode.UNKNOWN_REASON, messageBody))
         Assert.assertEquals(
             "{\"code\":\"unknownReason\",\"message\":\"$messageBody\"}",
             error

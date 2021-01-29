@@ -12,6 +12,7 @@ package com.salesforce.barcodescannerdemo
 import android.os.Bundle
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
+import com.salesforce.barcodescannerdemo.databinding.ActivityMainBinding
 import com.salesforce.barcodescannerplugin.BarcodeScannerPlugin
 import com.salesforce.barcodescannerplugin.webViewBinder
 import com.salesforce.nimbus.BoundPlugin
@@ -19,7 +20,6 @@ import com.salesforce.nimbus.NimbusJSUtilities
 import com.salesforce.nimbus.bridge.webview.WebViewBridge
 import com.salesforce.nimbus.bridge.webview.bridge
 import com.salesforce.nimbus.core.plugins.DeviceInfoPlugin
-import kotlinx.android.synthetic.main.activity_main.plugin_webview
 import java.nio.charset.StandardCharsets
 
 class MainActivity : AppCompatActivity() {
@@ -31,10 +31,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var webViewBridge: WebViewBridge
 
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // initial the demo webview html content
         initializeDemoWebViewHtmlContent()
@@ -43,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         barcodeScannerPlugin = BarcodeScannerPlugin(this)
         deviceInfoPlugin = DeviceInfoPlugin(this)
 
-        webViewBridge = plugin_webview.bridge {
+        webViewBridge = binding.pluginWebview.bridge {
             bind { deviceInfoPlugin.webViewBinder() }
             bind { barcodeScannerPlugin.webViewBinder() }
         }
@@ -60,6 +62,6 @@ class MainActivity : AppCompatActivity() {
         val sourceHtml = this.resources.assets.open("webview.html")
         val htmlStream = NimbusJSUtilities.injectedNimbusStream(sourceHtml.buffered(), this)
         val html = htmlStream.bufferedReader(StandardCharsets.UTF_8).readText()
-        plugin_webview.loadDataWithBaseURL("", html, "text/html", StandardCharsets.UTF_8.name(), "")
+        binding.pluginWebview.loadDataWithBaseURL("", html, "text/html", StandardCharsets.UTF_8.name(), "")
     }
 }
