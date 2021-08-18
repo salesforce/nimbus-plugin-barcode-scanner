@@ -10,6 +10,7 @@ use_frameworks!
 abstract_target 'My Pods' do
   target 'BarcodeScanner'
   target 'Scanner'
+  target 'BarcodeScannerDemoApp'
 
   pod 'NimbusBridge', '~> 2.0'
   pod 'DesignSystem', '~> 2.0'

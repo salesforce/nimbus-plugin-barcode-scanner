@@ -1,0 +1,82 @@
+<!--
+  ~
+  ~ Copyright (c) 2019, Salesforce.com, inc.
+  ~ All rights reserved.
+  ~ SPDX-License-Identifier: BSD-3-Clause
+  ~ For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+  ~
+  -->
+
+<html>
+<head>
+    <style> body {padding:20px;} input {margin-right: 10px; padding: 8px; font-size: 18px;}</style>
+</head>
+<body>
+<p>
+    <input id='scanSingleBarcode' type='button' onClick='startScanning(false)'
+           value='Scan Single Barcode'/><br>
+</p>
+<p>
+    <input id='scanContinuousBarcode' type='button' onClick='startScanning(true)'
+           value='Scan Continuously'/>
+    <input id='stopContinuousBarcodeScan' type='button' onClick='stopScanning()' value='Stop'/>
+</p>
+<div id="result"></div>
+</body>
+<script>
+
+let barcodeScanner = __nimbus.plugins.barcodeScanner;
+let deviceInfoPlugin = __nimbus.plugins.DeviceInfoPlugin;
+let continuousScan = false;
+let scanResults = [];
+
+function setResult(value){
+    document.querySelector("#result").innerText = value;
+}
+
+let barcodeScannerCallback =
+    (barcode, error) => {
+        console.log(barcode);
+        if (barcode !== null) {
+            console.log(barcode.value);
+            scanResults.push(JSON.stringify(barcode) + "\n");
+            setResult(scanResults.join(""));
+            if (continuousScan){
+                setTimeout(function() { barcodeScanner.resumeCapture(barcodeScannerCallback);}, 500)
+            } else {
+                stopScanning()
+            }
+        } if (error !== null) {
+            scanResults.push("error: " + JSON.stringify(error) + "\n")
+            setResult(scanResults.join(""));
+        }
+    };
+
+if (typeof deviceInfoPlugin !== undefined && deviceInfoPlugin !== null){
+    deviceInfoPlugin.getDeviceInfo().then( (deviceInfo) => {
+        console.log(deviceInfo);
+        setResult("Click Scan Barcode to begin. Current version: " + deviceInfo.appVersion );
+    });
+}
+
+function startScanning(continuous) {
+    setResult("")
+    scanResults = [];
+    continuousScan = continuous;
+    if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
+        barcodeScanner.beginCapture(
+            {"barcodeTypes": ["code128", "code39", "code93", "ean13", "ean8", "upce", "upca", "qr"],
+            "instructionText":"Position barcode in the scanner view",
+            "successText":"Success!"},
+            barcodeScannerCallback
+        );
+    }
+}
+
+function stopScanning() {
+    if(typeof barcodeScanner !== undefined && barcodeScanner !== null){
+        barcodeScanner.endCapture()
+    }
+}
+</script>
+</html>
