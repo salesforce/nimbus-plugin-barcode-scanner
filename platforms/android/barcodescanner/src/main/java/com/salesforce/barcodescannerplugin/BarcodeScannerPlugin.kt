@@ -60,7 +60,7 @@ class BarcodeScannerPlugin(private val context: Context) : Plugin, BarcodeScanne
     override fun endCapture() {
         eventBus.apply {
             post(StopScanEvent())
-            unregister(this)
+            unregister(this@BarcodeScannerPlugin)
         }
     }
 
