@@ -23,7 +23,7 @@ jobs:
       - run:
           name: Build Android
           working_directory: platforms/android
-          command: ./gradlew assembleDebug testDebugUnitTest
+          command: ./gradlew --debug assembleDebug testDebugUnitTest
 
 workflows:
   version: 2
